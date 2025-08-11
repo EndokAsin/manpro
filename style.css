@@ -1,0 +1,27 @@
+/* Menggunakan font Inter yang diimpor di HTML */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Gaya untuk modal (popup) */
+.modal {
+    display: none; /* Sembunyikan secara default */
+    z-index: 50; /* Pastikan modal berada di atas konten lain */
+}
+
+/* Kelas untuk menampilkan modal */
+.modal.show {
+    display: flex;
+}
+
+/* Kontainer untuk chart agar responsif */
+.chart-container {
+    position: relative;
+    height: 300px; /* Atur tinggi default */
+    width: 100%;
+}
+
+/* Menambahkan transisi halus untuk beberapa elemen */
+button, a {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
