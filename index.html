@@ -59,7 +59,18 @@
                 <div id="dashboard-container" class="mb-8 hidden">
                     <!-- Kartu KPI -->
                     <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-                        <!-- KPI akan dirender oleh JS -->
+                        <!-- KPI akan dirender oleh JS. Strukturnya harus mengikuti contoh di bawah ini untuk tampilan mobile yang benar. -->
+                        <!-- Contoh struktur KPI Card yang benar:
+                        <div class="bg-white p-4 rounded-lg shadow flex items-start">
+                            <div class="bg-green-100 rounded-full p-3 mr-3">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path></svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-gray-500 truncate">Total Budget</p>
+                                <p class="text-xl sm:text-2xl font-bold text-gray-900 break-words">Rp2.000.000.000</p>
+                            </div>
+                        </div>
+                        -->
                     </div>
 
                     <!-- Kontainer untuk Chart dan Deadline -->
@@ -112,17 +123,17 @@
                     </div>
                     <hr class="my-6">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6">
-                        <div class="bg-blue-100 p-3 sm:p-4 rounded-lg">
+                        <div class="bg-blue-100 p-3 sm:p-4 rounded-lg overflow-hidden">
                             <h4 class="font-semibold text-blue-800 text-sm truncate">Budget Awal</h4>
-                            <p id="detail-initial-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-blue-900 break-words"></p>
+                            <p id="detail-initial-budget" class="text-lg sm:text-xl font-bold text-blue-900 break-words"></p>
                         </div>
-                        <div class="bg-orange-100 p-3 sm:p-4 rounded-lg">
+                        <div class="bg-orange-100 p-3 sm:p-4 rounded-lg overflow-hidden">
                             <h4 class="font-semibold text-orange-800 text-sm truncate">Disesuaikan</h4>
-                            <p id="detail-adjusted-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-orange-900 break-words"></p>
+                            <p id="detail-adjusted-budget" class="text-lg sm:text-xl font-bold text-orange-900 break-words"></p>
                         </div>
-                        <div class="bg-green-100 p-3 sm:p-4 rounded-lg">
+                        <div class="bg-green-100 p-3 sm:p-4 rounded-lg overflow-hidden">
                             <h4 class="font-semibold text-green-800 text-sm truncate">Sisa Budget</h4>
-                            <p id="detail-current-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-green-900 break-words"></p>
+                            <p id="detail-current-budget" class="text-lg sm:text-xl font-bold text-green-900 break-words"></p>
                         </div>
                         <div class="bg-yellow-100 p-3 sm:p-4 rounded-lg col-span-2 md:col-span-1">
                             <h4 class="font-semibold text-yellow-800 text-sm">Timeline</h4>
