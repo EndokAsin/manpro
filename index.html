@@ -46,7 +46,7 @@
             <nav class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
                 <h1 class="text-lg sm:text-xl font-bold text-indigo-600">ProyekManajer</h1>
                 <div class="flex items-center">
-                    <span id="user-email" class="hidden sm:inline text-gray-600 mr-4 text-sm truncate"></span>
+                    <span id="user-email" class="hidden sm:inline text-gray-600 mr-4 text-sm truncate max-w-[150px]"></span>
                     <button id="logout-button" class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Logout</button>
                 </div>
             </nav>
@@ -100,33 +100,33 @@
                 <button id="back-to-projects" class="mb-4 px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600">&larr; Kembali</button>
                 <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-                        <div class="mb-4 sm:mb-0">
-                           <h3 id="detail-project-name" class="text-2xl sm:text-3xl font-bold text-gray-900"></h3>
+                        <div class="mb-4 sm:mb-0 w-full sm:w-auto">
+                           <h3 id="detail-project-name" class="text-2xl sm:text-3xl font-bold text-gray-900 break-words"></h3>
                            <p id="detail-project-description" class="text-gray-600 mt-1"></p>
                         </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button id="open-add-budget-button" class="flex-grow sm:flex-grow-0 px-3 py-1 text-sm font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Ubah Budget</button>
-                            <button id="export-excel-button" class="flex-grow sm:flex-grow-0 px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Export</button>
-                            <button id="delete-project-button" class="flex-grow sm:flex-grow-0 px-3 py-1 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Hapus</button>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <button id="open-add-budget-button" class="w-full sm:w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Ubah Budget</button>
+                            <button id="export-excel-button" class="w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Export</button>
+                            <button id="delete-project-button" class="w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Hapus</button>
                         </div>
                     </div>
                     <hr class="my-6">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6">
                         <div class="bg-blue-100 p-3 sm:p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-800 text-sm">Budget Awal</h4>
-                            <p id="detail-initial-budget" class="text-lg sm:text-2xl font-bold text-blue-900"></p>
+                            <h4 class="font-semibold text-blue-800 text-sm truncate">Budget Awal</h4>
+                            <p id="detail-initial-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-blue-900 break-words"></p>
                         </div>
                         <div class="bg-orange-100 p-3 sm:p-4 rounded-lg">
-                            <h4 class="font-semibold text-orange-800 text-sm">Disesuaikan</h4>
-                            <p id="detail-adjusted-budget" class="text-lg sm:text-2xl font-bold text-orange-900"></p>
+                            <h4 class="font-semibold text-orange-800 text-sm truncate">Disesuaikan</h4>
+                            <p id="detail-adjusted-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-orange-900 break-words"></p>
                         </div>
                         <div class="bg-green-100 p-3 sm:p-4 rounded-lg">
-                            <h4 class="font-semibold text-green-800 text-sm">Sisa Budget</h4>
-                            <p id="detail-current-budget" class="text-lg sm:text-2xl font-bold text-green-900"></p>
+                            <h4 class="font-semibold text-green-800 text-sm truncate">Sisa Budget</h4>
+                            <p id="detail-current-budget" class="text-lg sm:text-xl md:text-2xl font-bold text-green-900 break-words"></p>
                         </div>
-                        <div class="bg-yellow-100 p-3 sm:p-4 rounded-lg">
+                        <div class="bg-yellow-100 p-3 sm:p-4 rounded-lg col-span-2 md:col-span-1">
                             <h4 class="font-semibold text-yellow-800 text-sm">Timeline</h4>
-                            <p id="detail-timeline" class="text-base sm:text-lg font-medium text-yellow-900"></p>
+                            <p id="detail-timeline" class="text-sm sm:text-base font-medium text-yellow-900"></p>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
