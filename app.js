@@ -230,13 +230,12 @@ const renderTasks = (tasks) => {
 // --- FUNGSI CHART ---
 
 const renderGanttChart = (projects) => {
-    const ganttContainer = document.querySelector("#gantt");
-    if (ganttContainer) {
-        ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
+    const ganttCtx = document.getElementById('gantt-chart').getContext('2d');
+    if (ganttChartInstance) {
+        ganttChartInstance.destroy();
     }
 
-    // PERBAIKAN: Filter proyek untuk memastikan hanya yang memiliki tanggal valid yang dirender
-    const validProjects = projects.filter(p => p.start_date && p.end_date && typeof p.start_date === 'string' && typeof p.end_date === 'string');
+    const validProjects = projects.filter(p => p.start_date && p.end_date);
 
     if (!validProjects || validProjects.length === 0) {
         if(ganttChartSection) ganttChartSection.style.display = 'none';
@@ -244,44 +243,54 @@ const renderGanttChart = (projects) => {
     }
     if(ganttChartSection) ganttChartSection.style.display = 'block';
 
-    const tasksForGantt = validProjects.map(project => {
-        const today = new Date();
-        const startDate = new Date(project.start_date);
-        const endDate = new Date(project.end_date);
-        const totalDuration = (endDate - startDate);
-        const elapsed = (today - startDate);
-        let progress = 0;
-        if (totalDuration > 0) {
-            progress = Math.round((elapsed / totalDuration) * 100);
-        }
-        if (progress < 0) progress = 0;
-        if (progress > 100) progress = 100;
-        return {
-            id: 'project_' + project.id,
-            name: project.name,
-            start: project.start_date,
-            end: project.end_date,
-            progress: progress,
-        };
-    });
-
-    if (tasksForGantt.length > 0) {
-        try {
-            ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
-                view_mode: 'Month',
-                on_click: (task) => {
-                    const projectId = parseInt(task.id.replace('project_', ''));
-                    const project = projects.find(p => p.id === projectId);
-                    if (project) {
-                        showProjectDetailView(project);
+    ganttChartInstance = new Chart(ganttCtx, {
+        type: 'bar',
+        data: {
+            labels: validProjects.map(p => p.name),
+            datasets: [{
+                label: 'Durasi Proyek',
+                data: validProjects.map(p => [new Date(p.start_date), new Date(p.end_date)]),
+                backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                borderColor: 'rgba(79, 70, 229, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        tooltipFormat: 'dd MMM yyyy'
+                    },
+                    min: validProjects.reduce((min, p) => new Date(p.start_date) < min ? new Date(p.start_date) : min, new Date()),
+                    title: {
+                        display: true,
+                        text: 'Tanggal'
                     }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 },
-            });
-        } catch(e) {
-            console.error("Gantt Chart Error:", e);
-            if(ganttChartSection) ganttChartSection.style.display = 'none';
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const start = new Date(context.raw[0]).toLocaleDateString('id-ID');
+                            const end = new Date(context.raw[1]).toLocaleDateString('id-ID');
+                            return `${context.dataset.label}: ${start} - ${end}`;
+                        }
+                    }
+                }
+            }
         }
-    }
+    });
 };
 
 const renderDashboardCharts = (projects) => {
