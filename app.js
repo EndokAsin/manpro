@@ -11,12 +11,11 @@ let budgetChartInstance = null;
 let progressChartInstance = null;
 let dashboardBudgetChartInstance = null;
 let dashboardStatusChartInstance = null;
-let ganttChartInstance = null; // State untuk Gantt Chart
+let ganttChartInstance = null; 
 
 // --- ELEMEN DOM ---
 const authPage = document.getElementById('auth-page');
 const appPage = document.getElementById('app-page');
-const ganttChartContainer = document.getElementById('gantt-chart-container');
 const projectsListView = document.getElementById('projects-list-view');
 const projectDetailView = document.getElementById('project-detail-view');
 const dashboardContainer = document.getElementById('dashboard-container');
@@ -70,6 +69,7 @@ const addBudgetForm = document.getElementById('add-budget-form');
 const cancelAddBudgetModal = document.getElementById('cancel-add-budget-modal');
 const addBudgetAmountInput = document.getElementById('add-budget-amount');
 const openAddBudgetButton = document.getElementById('open-add-budget-button');
+const ganttChartSection = document.getElementById('gantt-chart-section');
 
 
 // --- FUNGSI UTILITAS & AUTENTIKASI ---
@@ -273,11 +273,14 @@ const renderTasks = (tasks) => {
 // --- FUNGSI CHART ---
 
 const renderGanttChart = (projects) => {
-    ganttChartContainer.innerHTML = '<svg id="gantt"></svg>';
+    const ganttContainer = document.querySelector("#gantt");
+    ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
     if (!projects || projects.length === 0) {
-        ganttChartContainer.innerHTML = '<p class="text-gray-500 text-center p-4">Tidak ada data proyek untuk ditampilkan.</p>';
+        ganttChartSection.style.display = 'none';
         return;
     }
+    ganttChartSection.style.display = 'block';
+
     const tasksForGantt = projects.map(project => {
         const today = new Date();
         const startDate = new Date(project.start_date);
@@ -657,22 +660,23 @@ const handleExportToExcel = async () => {
 };
 
 const initializeApp = () => {
-    switchAuthModeLink.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
-    authForm.addEventListener('submit', handleAuthSubmit);
-    logoutButton.addEventListener('click', handleLogout);
-    backToProjectsButton.addEventListener('click', showProjectsListView);
-    addProjectButton.addEventListener('click', () => openProjectModal());
-    projectForm.addEventListener('submit', handleProjectFormSubmit);
-    cancelProjectModal.addEventListener('click', closeProjectModal);
-    deleteProjectButton.addEventListener('click', handleDeleteProject);
-    saveNotesButton.addEventListener('click', handleSaveNotes);
-    exportExcelButton.addEventListener('click', handleExportToExcel);
-    addTaskButton.addEventListener('click', () => openTaskModal());
-    taskForm.addEventListener('submit', handleTaskFormSubmit);
-    cancelTaskModal.addEventListener('click', closeTaskModal);
-    openAddBudgetButton.addEventListener('click', openAddBudgetModal);
-    addBudgetForm.addEventListener('submit', handleAddBudgetFormSubmit);
-    cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
+    if(switchAuthModeLink) switchAuthModeLink.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
+    if(authForm) authForm.addEventListener('submit', handleAuthSubmit);
+    if(logoutButton) logoutButton.addEventListener('click', handleLogout);
+    if(backToProjectsButton) backToProjectsButton.addEventListener('click', showProjectsListView);
+    if(addProjectButton) addProjectButton.addEventListener('click', () => openProjectModal());
+    if(projectForm) projectForm.addEventListener('submit', handleProjectFormSubmit);
+    if(cancelProjectModal) cancelProjectModal.addEventListener('click', closeProjectModal);
+    if(deleteProjectButton) deleteProjectButton.addEventListener('click', handleDeleteProject);
+    if(saveNotesButton) saveNotesButton.addEventListener('click', handleSaveNotes);
+    if(exportExcelButton) exportExcelButton.addEventListener('click', handleExportToExcel);
+    if(addTaskButton) addTaskButton.addEventListener('click', () => openTaskModal());
+    if(taskForm) taskForm.addEventListener('submit', handleTaskFormSubmit);
+    if(cancelTaskModal) cancelTaskModal.addEventListener('click', closeTaskModal);
+    if(openAddBudgetButton) openAddBudgetButton.addEventListener('click', openAddBudgetModal);
+    if(addBudgetForm) addBudgetForm.addEventListener('submit', handleAddBudgetFormSubmit);
+    if(cancelAddBudgetModal) cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
+
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (session && session.user) {
             currentUser = session.user;
@@ -685,6 +689,4 @@ const initializeApp = () => {
     });
 };
 
-// Perbaikan: Menjalankan skrip setelah seluruh halaman HTML dimuat
 document.addEventListener('DOMContentLoaded', initializeApp);
-
