@@ -14,7 +14,6 @@ let dashboardStatusChartInstance = null;
 let ganttChartInstance = null; 
 
 // --- ELEMEN DOM (Deklarasi Variabel) ---
-// PERBAIKAN: Variabel dideklarasikan di sini, tapi nilainya diisi nanti setelah DOM siap.
 let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     dashboardKPIs, upcomingDeadlinesList, authForm, authTitle, authButton,
     switchAuthModeLink, authPromptText, authError, emailInput, passwordInput,
