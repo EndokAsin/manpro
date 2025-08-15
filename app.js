@@ -685,4 +685,5 @@ const initializeApp = () => {
     });
 };
 
-initializeApp();
+// Perbaikan: Menjalankan skrip setelah seluruh halaman HTML dimuat
+document.addEventListener('DOMContentLoaded', initializeApp);
