@@ -265,9 +265,9 @@ const renderGanttChart = (projects) => {
     });
 
     if (tasksForGantt.length > 0) {
+        // PERBAIKAN: Menghapus opsi 'language' untuk menghindari error
         ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
             view_mode: 'Month',
-            language: 'id',
             on_click: (task) => {
                 const projectId = parseInt(task.id.replace('project_', ''));
                 const project = projects.find(p => p.id === projectId);
