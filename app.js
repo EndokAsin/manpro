@@ -274,14 +274,20 @@ const renderTasks = (tasks) => {
 
 const renderGanttChart = (projects) => {
     const ganttContainer = document.querySelector("#gantt");
-    ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
-    if (!projects || projects.length === 0) {
-        ganttChartSection.style.display = 'none';
+    if (ganttContainer) {
+        ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
+    }
+
+    // PERBAIKAN: Filter proyek untuk memastikan hanya yang memiliki tanggal valid yang dirender
+    const validProjects = projects.filter(p => p.start_date && p.end_date);
+
+    if (!validProjects || validProjects.length === 0) {
+        if(ganttChartSection) ganttChartSection.style.display = 'none';
         return;
     }
-    ganttChartSection.style.display = 'block';
+    if(ganttChartSection) ganttChartSection.style.display = 'block';
 
-    const tasksForGantt = projects.map(project => {
+    const tasksForGantt = validProjects.map(project => {
         const today = new Date();
         const startDate = new Date(project.start_date);
         const endDate = new Date(project.end_date);
@@ -301,17 +307,20 @@ const renderGanttChart = (projects) => {
             progress: progress,
         };
     });
-    ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
-        view_mode: 'Month',
-        language: 'id',
-        on_click: (task) => {
-            const projectId = parseInt(task.id.replace('project_', ''));
-            const project = projects.find(p => p.id === projectId);
-            if (project) {
-                showProjectDetailView(project);
-            }
-        },
-    });
+
+    if (tasksForGantt.length > 0) {
+        ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
+            view_mode: 'Month',
+            language: 'id',
+            on_click: (task) => {
+                const projectId = parseInt(task.id.replace('project_', ''));
+                const project = projects.find(p => p.id === projectId);
+                if (project) {
+                    showProjectDetailView(project);
+                }
+            },
+        });
+    }
 };
 
 const renderDashboardCharts = (projects) => {
@@ -690,4 +699,3 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
-
