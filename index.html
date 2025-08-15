@@ -93,7 +93,7 @@
                     </div>
                     
                     <!-- Gantt Chart Container -->
-                    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+                    <div id="gantt-chart-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
                         <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">Timeline Proyek (Gantt Chart)</h3>
                         <div id="gantt-chart-container" class="overflow-x-auto">
                             <svg id="gantt"></svg>
@@ -169,7 +169,8 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
+    <!-- PERBAIKAN: Menggunakan link CDN yang berbeda untuk Frappe Gantt -->
+    <script src="https://unpkg.com/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
     
     <!-- Custom JS -->
     <script src="app.js"></script>
