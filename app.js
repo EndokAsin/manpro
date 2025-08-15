@@ -690,3 +690,4 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
