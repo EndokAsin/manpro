@@ -13,63 +13,21 @@ let dashboardBudgetChartInstance = null;
 let dashboardStatusChartInstance = null;
 let ganttChartInstance = null; 
 
-// --- ELEMEN DOM ---
-const authPage = document.getElementById('auth-page');
-const appPage = document.getElementById('app-page');
-const projectsListView = document.getElementById('projects-list-view');
-const projectDetailView = document.getElementById('project-detail-view');
-const dashboardContainer = document.getElementById('dashboard-container');
-const dashboardKPIs = document.getElementById('dashboard-kpis');
-const upcomingDeadlinesList = document.getElementById('upcoming-deadlines-list');
-const authForm = document.getElementById('auth-form');
-const authTitle = document.getElementById('auth-title');
-const authButton = document.getElementById('auth-button');
-const switchAuthModeLink = document.getElementById('switch-auth-mode');
-const authPromptText = document.getElementById('auth-prompt-text');
-const authError = document.getElementById('auth-error');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const userEmailEl = document.getElementById('user-email');
-const logoutButton = document.getElementById('logout-button');
-const projectsContainer = document.getElementById('projects-container');
-const addProjectButton = document.getElementById('add-project-button');
-const backToProjectsButton = document.getElementById('back-to-projects');
-const detailProjectName = document.getElementById('detail-project-name');
-const detailProjectDescription = document.getElementById('detail-project-description');
-const detailInitialBudget = document.getElementById('detail-initial-budget');
-const detailAdjustedBudget = document.getElementById('detail-adjusted-budget');
-const detailCurrentBudget = document.getElementById('detail-current-budget');
-const detailTimeline = document.getElementById('detail-timeline');
-const projectNotes = document.getElementById('project-notes');
-const saveNotesButton = document.getElementById('save-notes-button');
-const deleteProjectButton = document.getElementById('delete-project-button');
-const exportExcelButton = document.getElementById('export-excel-button');
-const tasksList = document.getElementById('tasks-list');
-const addTaskButton = document.getElementById('add-task-button');
-const projectModal = document.getElementById('project-modal');
-const projectModalTitle = document.getElementById('project-modal-title');
-const projectForm = document.getElementById('project-form');
-const cancelProjectModal = document.getElementById('cancel-project-modal');
-const projectIdInput = document.getElementById('project-id');
-const projectNameInput = document.getElementById('project-name');
-const projectDescriptionInput = document.getElementById('project-description');
-const projectBudgetInput = document.getElementById('project-budget');
-const projectStartDateInput = document.getElementById('project-start-date');
-const projectEndDateInput = document.getElementById('project-end-date');
-const taskModal = document.getElementById('task-modal');
-const taskModalTitle = document.getElementById('task-modal-title');
-const taskForm = document.getElementById('task-form');
-const cancelTaskModal = document.getElementById('cancel-task-modal');
-const taskIdInput = document.getElementById('task-id');
-const taskNameInput = document.getElementById('task-name');
-const taskCostInput = document.getElementById('task-cost');
-const taskStatusInput = document.getElementById('task-status');
-const addBudgetModal = document.getElementById('add-budget-modal');
-const addBudgetForm = document.getElementById('add-budget-form');
-const cancelAddBudgetModal = document.getElementById('cancel-add-budget-modal');
-const addBudgetAmountInput = document.getElementById('add-budget-amount');
-const openAddBudgetButton = document.getElementById('open-add-budget-button');
-const ganttChartSection = document.getElementById('gantt-chart-section');
+// --- ELEMEN DOM (Deklarasi Variabel) ---
+// PERBAIKAN: Variabel dideklarasikan di sini, tapi nilainya diisi nanti setelah DOM siap.
+let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
+    dashboardKPIs, upcomingDeadlinesList, authForm, authTitle, authButton,
+    switchAuthModeLink, authPromptText, authError, emailInput, passwordInput,
+    userEmailEl, logoutButton, projectsContainer, addProjectButton,
+    backToProjectsButton, detailProjectName, detailProjectDescription,
+    detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
+    projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton,
+    tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
+    cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
+    projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
+    taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
+    taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
+    cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
 
 
 // --- FUNGSI UTILITAS & AUTENTIKASI ---
@@ -278,7 +236,6 @@ const renderGanttChart = (projects) => {
         ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
     }
 
-    // PERBAIKAN: Filter proyek untuk memastikan hanya yang memiliki tanggal valid yang dirender
     const validProjects = projects.filter(p => p.start_date && p.end_date);
 
     if (!validProjects || validProjects.length === 0) {
@@ -669,6 +626,65 @@ const handleExportToExcel = async () => {
 };
 
 const initializeApp = () => {
+    // --- Inisialisasi Elemen DOM ---
+    authPage = document.getElementById('auth-page');
+    appPage = document.getElementById('app-page');
+    projectsListView = document.getElementById('projects-list-view');
+    projectDetailView = document.getElementById('project-detail-view');
+    dashboardContainer = document.getElementById('dashboard-container');
+    dashboardKPIs = document.getElementById('dashboard-kpis');
+    upcomingDeadlinesList = document.getElementById('upcoming-deadlines-list');
+    authForm = document.getElementById('auth-form');
+    authTitle = document.getElementById('auth-title');
+    authButton = document.getElementById('auth-button');
+    switchAuthModeLink = document.getElementById('switch-auth-mode');
+    authPromptText = document.getElementById('auth-prompt-text');
+    authError = document.getElementById('auth-error');
+    emailInput = document.getElementById('email');
+    passwordInput = document.getElementById('password');
+    userEmailEl = document.getElementById('user-email');
+    logoutButton = document.getElementById('logout-button');
+    projectsContainer = document.getElementById('projects-container');
+    addProjectButton = document.getElementById('add-project-button');
+    backToProjectsButton = document.getElementById('back-to-projects');
+    detailProjectName = document.getElementById('detail-project-name');
+    detailProjectDescription = document.getElementById('detail-project-description');
+    detailInitialBudget = document.getElementById('detail-initial-budget');
+    detailAdjustedBudget = document.getElementById('detail-adjusted-budget');
+    detailCurrentBudget = document.getElementById('detail-current-budget');
+    detailTimeline = document.getElementById('detail-timeline');
+    projectNotes = document.getElementById('project-notes');
+    saveNotesButton = document.getElementById('save-notes-button');
+    deleteProjectButton = document.getElementById('delete-project-button');
+    exportExcelButton = document.getElementById('export-excel-button');
+    tasksList = document.getElementById('tasks-list');
+    addTaskButton = document.getElementById('add-task-button');
+    projectModal = document.getElementById('project-modal');
+    projectModalTitle = document.getElementById('project-modal-title');
+    projectForm = document.getElementById('project-form');
+    cancelProjectModal = document.getElementById('cancel-project-modal');
+    projectIdInput = document.getElementById('project-id');
+    projectNameInput = document.getElementById('project-name');
+    projectDescriptionInput = document.getElementById('project-description');
+    projectBudgetInput = document.getElementById('project-budget');
+    projectStartDateInput = document.getElementById('project-start-date');
+    projectEndDateInput = document.getElementById('project-end-date');
+    taskModal = document.getElementById('task-modal');
+    taskModalTitle = document.getElementById('task-modal-title');
+    taskForm = document.getElementById('task-form');
+    cancelTaskModal = document.getElementById('cancel-task-modal');
+    taskIdInput = document.getElementById('task-id');
+    taskNameInput = document.getElementById('task-name');
+    taskCostInput = document.getElementById('task-cost');
+    taskStatusInput = document.getElementById('task-status');
+    addBudgetModal = document.getElementById('add-budget-modal');
+    addBudgetForm = document.getElementById('add-budget-form');
+    cancelAddBudgetModal = document.getElementById('cancel-add-budget-modal');
+    addBudgetAmountInput = document.getElementById('add-budget-amount');
+    openAddBudgetButton = document.getElementById('open-add-budget-button');
+    ganttChartSection = document.getElementById('gantt-chart-section');
+
+    // --- Event Listeners ---
     if(switchAuthModeLink) switchAuthModeLink.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
     if(authForm) authForm.addEventListener('submit', handleAuthSubmit);
     if(logoutButton) logoutButton.addEventListener('click', handleLogout);
