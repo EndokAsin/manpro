@@ -235,7 +235,8 @@ const renderGanttChart = (projects) => {
         ganttContainer.innerHTML = ""; // Kosongkan kontainer sebelum render
     }
 
-    const validProjects = projects.filter(p => p.start_date && p.end_date);
+    // PERBAIKAN: Filter proyek untuk memastikan hanya yang memiliki tanggal valid yang dirender
+    const validProjects = projects.filter(p => p.start_date && p.end_date && typeof p.start_date === 'string' && typeof p.end_date === 'string');
 
     if (!validProjects || validProjects.length === 0) {
         if(ganttChartSection) ganttChartSection.style.display = 'none';
@@ -265,17 +266,21 @@ const renderGanttChart = (projects) => {
     });
 
     if (tasksForGantt.length > 0) {
-        // PERBAIKAN: Menghapus opsi 'language' untuk menghindari error
-        ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
-            view_mode: 'Month',
-            on_click: (task) => {
-                const projectId = parseInt(task.id.replace('project_', ''));
-                const project = projects.find(p => p.id === projectId);
-                if (project) {
-                    showProjectDetailView(project);
-                }
-            },
-        });
+        try {
+            ganttChartInstance = new Gantt("#gantt", tasksForGantt, {
+                view_mode: 'Month',
+                on_click: (task) => {
+                    const projectId = parseInt(task.id.replace('project_', ''));
+                    const project = projects.find(p => p.id === projectId);
+                    if (project) {
+                        showProjectDetailView(project);
+                    }
+                },
+            });
+        } catch(e) {
+            console.error("Gantt Chart Error:", e);
+            if(ganttChartSection) ganttChartSection.style.display = 'none';
+        }
     }
 };
 
