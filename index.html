@@ -119,6 +119,7 @@
                            <p id="detail-project-description" class="text-gray-600 mt-2"></p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <button id="copy-project-button" class="w-full sm:w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salin Program</button>
                             <button id="open-add-budget-button" class="w-full sm:w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Ubah Budget</button>
                             <button id="export-excel-button" class="w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Export</button>
                             <button id="delete-project-button" class="w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Hapus</button>
@@ -184,13 +185,9 @@
                         </fieldset>
                     </div>
                     <div>
-                        <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
-                        <select id="project-venue-category" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm">
-                            <option value="Panti Jompo">Panti Jompo</option>
-                            <option value="Yayasan Disabilitas">Yayasan Disabilitas</option>
-                            <option value="Yayasan Kanker">Yayasan Kanker</option>
-                            <option value="Umum">Umum</option>
-                        </select>
+                        <label for="project-venue-category-input" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
+                        <input id="project-venue-category-input" list="venue-category-list" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Contoh: Panti Jompo">
+                        <datalist id="venue-category-list"></datalist>
                     </div>
                 </div>
 
