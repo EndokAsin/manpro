@@ -7,6 +7,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentProject = null;
 let isRegisterMode = false;
+let userVenueCategories = [];
+const defaultVenueCategories = ["Panti Jompo", "Yayasan Disabilitas", "Yayasan Kanker", "Umum"];
 let budgetChartInstance = null;
 let progressChartInstance = null;
 let dashboardBudgetChartInstance = null;
@@ -21,11 +23,11 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
     detailActivityType, detailVenueCategory,
-    projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton,
+    projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton, copyProjectButton,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
     cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
-    projectVenueCategoryInput,
+    projectVenueCategoryInput, venueCategoryList,
     taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
     taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
@@ -94,9 +96,10 @@ const showAuthPage = () => {
     appPage.classList.add('hidden');
 };
 
-const showAppPage = () => {
+const showAppPage = async () => {
     authPage.classList.add('hidden');
     appPage.classList.remove('hidden');
+    await fetchUserVenueCategories();
     showProjectsListView();
 };
 
@@ -441,6 +444,31 @@ const fetchTasks = async (projectId) => {
     return data;
 };
 
+const fetchUserVenueCategories = async () => {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+        .from('user_venue_categories')
+        .select('category_name')
+        .eq('user_id', currentUser.id);
+
+    if (error) {
+        console.error('Error fetching venue categories:', error);
+        userVenueCategories = [...defaultVenueCategories];
+    } else {
+        const customCategories = data.map(item => item.category_name);
+        userVenueCategories = [...new Set([...defaultVenueCategories, ...customCategories])];
+    }
+};
+
+const populateVenueCategoryDatalist = () => {
+    venueCategoryList.innerHTML = '';
+    userVenueCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        venueCategoryList.appendChild(option);
+    });
+};
+
 const handleProjectFormSubmit = async (event) => {
     event.preventDefault();
     const isUpdate = !!projectIdInput.value;
@@ -451,34 +479,45 @@ const handleProjectFormSubmit = async (event) => {
         selectedActivities.push(checkbox.value);
     });
 
+    const venueCategoryValue = projectVenueCategoryInput.value.trim();
+
     const projectData = {
         name: projectNameInput.value,
         description: projectDescriptionInput.value,
         start_date: projectStartDateInput.value,
         end_date: projectEndDateInput.value,
-        activity_type: selectedActivities, // Simpan sebagai array
-        venue_category: projectVenueCategoryInput.value,
+        activity_type: selectedActivities,
+        venue_category: venueCategoryValue,
         user_id: currentUser.id
     };
+
     if (!isUpdate) {
         projectData.initial_budget = initialBudget;
         projectData.current_budget = initialBudget;
     }
+
     let response;
     if (isUpdate) {
-        response = await supabaseClient
-            .from('projects')
-            .update(projectData)
-            .eq('id', projectIdInput.value);
+        response = await supabaseClient.from('projects').update(projectData).eq('id', projectIdInput.value);
     } else {
-        response = await supabaseClient
-            .from('projects')
-            .insert([projectData]);
+        response = await supabaseClient.from('projects').insert([projectData]);
     }
+
     if (response.error) {
         console.error('Error saving project:', response.error.message);
         alert('Gagal menyimpan proyek: ' + response.error.message);
     } else {
+        // Check if the venue category is new and save it
+        if (venueCategoryValue && !userVenueCategories.includes(venueCategoryValue)) {
+            const { error: insertError } = await supabaseClient
+                .from('user_venue_categories')
+                .insert({ user_id: currentUser.id, category_name: venueCategoryValue });
+            if (insertError) {
+                console.error('Failed to save new venue category:', insertError); // Log error but don't block UI
+            } else {
+                await fetchUserVenueCategories(); // Refresh categories list
+            }
+        }
         closeProjectModal();
         fetchProjects();
     }
@@ -496,14 +535,9 @@ const handleTaskFormSubmit = async (event) => {
     };
     let response;
     if (isUpdate) {
-        response = await supabaseClient
-            .from('tasks')
-            .update(taskData)
-            .eq('id', taskIdInput.value);
+        response = await supabaseClient.from('tasks').update(taskData).eq('id', taskIdInput.value);
     } else {
-        response = await supabaseClient
-            .from('tasks')
-            .insert([taskData]);
+        response = await supabaseClient.from('tasks').insert([taskData]);
     }
     if (response.error) {
         console.error('Error saving task:', response.error.message);
@@ -551,6 +585,55 @@ const handleSaveNotes = async () => {
     }
 };
 
+const handleCopyProject = async () => {
+    if (!currentProject || !confirm(`Salin program "${currentProject.name}" sebagai templat baru? Semua tugas juga akan disalin.`)) {
+        return;
+    }
+
+    try {
+        // 1. Fetch tasks from the original project
+        const tasksToCopy = await fetchTasks(currentProject.id);
+
+        // 2. Create the new project data
+        const newProjectData = {
+            ...currentProject,
+            name: `Salinan dari ${currentProject.name}`,
+        };
+        delete newProjectData.id; // remove old id
+        delete newProjectData.created_at; // let database set new timestamp
+
+        // 3. Insert the new project and get its ID
+        const { data: newProject, error: projectError } = await supabaseClient
+            .from('projects')
+            .insert(newProjectData)
+            .select()
+            .single();
+
+        if (projectError) throw projectError;
+        
+        // 4. If project copy is successful and there are tasks, copy tasks
+        if (newProject && tasksToCopy.length > 0) {
+            const newTasksData = tasksToCopy.map(task => {
+                const newTask = { ...task, project_id: newProject.id };
+                delete newTask.id;
+                delete newTask.created_at;
+                return newTask;
+            });
+
+            const { error: tasksError } = await supabaseClient.from('tasks').insert(newTasksData);
+            if (tasksError) throw tasksError;
+        }
+
+        alert(`Proyek "${newProject.name}" berhasil dibuat sebagai templat.`);
+        showProjectsListView();
+
+    } catch (error) {
+        console.error('Error copying project:', error.message);
+        alert('Gagal menyalin program: ' + error.message);
+    }
+};
+
+
 const handleDeleteProject = async () => {
     if (!confirm(`Apakah Anda yakin ingin menghapus proyek "${currentProject.name}"? Semua tugas di dalamnya juga akan terhapus.`)) {
         return;
@@ -597,6 +680,7 @@ const handleDeleteTaskClick = async (event) => {
 
 const openProjectModal = (project = null) => {
     projectForm.reset();
+    populateVenueCategoryDatalist();
     document.querySelectorAll('input[name="project-activity-type"]').forEach(checkbox => checkbox.checked = false);
 
     if (project) {
@@ -612,7 +696,7 @@ const openProjectModal = (project = null) => {
             });
         }
 
-        projectVenueCategoryInput.value = project.venue_category || 'Panti Jompo';
+        projectVenueCategoryInput.value = project.venue_category || '';
         projectBudgetInput.parentElement.style.display = 'none';
         projectStartDateInput.value = project.start_date;
         projectEndDateInput.value = project.end_date;
@@ -723,6 +807,7 @@ const initializeApp = () => {
     saveNotesButton = document.getElementById('save-notes-button');
     deleteProjectButton = document.getElementById('delete-project-button');
     exportExcelButton = document.getElementById('export-excel-button');
+    copyProjectButton = document.getElementById('copy-project-button');
     tasksList = document.getElementById('tasks-list');
     addTaskButton = document.getElementById('add-task-button');
     projectModal = document.getElementById('project-modal');
@@ -732,7 +817,8 @@ const initializeApp = () => {
     projectIdInput = document.getElementById('project-id');
     projectNameInput = document.getElementById('project-name');
     projectDescriptionInput = document.getElementById('project-description');
-    projectVenueCategoryInput = document.getElementById('project-venue-category');
+    projectVenueCategoryInput = document.getElementById('project-venue-category-input');
+    venueCategoryList = document.getElementById('venue-category-list');
     projectBudgetInput = document.getElementById('project-budget');
     projectStartDateInput = document.getElementById('project-start-date');
     projectEndDateInput = document.getElementById('project-end-date');
@@ -760,6 +846,7 @@ const initializeApp = () => {
     if(projectForm) projectForm.addEventListener('submit', handleProjectFormSubmit);
     if(cancelProjectModal) cancelProjectModal.addEventListener('click', closeProjectModal);
     if(deleteProjectButton) deleteProjectButton.addEventListener('click', handleDeleteProject);
+    if(copyProjectButton) copyProjectButton.addEventListener('click', handleCopyProject);
     if(saveNotesButton) saveNotesButton.addEventListener('click', handleSaveNotes);
     if(exportExcelButton) exportExcelButton.addEventListener('click', handleExportToExcel);
     if(addTaskButton) addTaskButton.addEventListener('click', () => openTaskModal());
@@ -769,11 +856,11 @@ const initializeApp = () => {
     if(addBudgetForm) addBudgetForm.addEventListener('submit', handleAddBudgetFormSubmit);
     if(cancelAddBudgetModal) cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
 
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (session && session.user) {
             currentUser = session.user;
             userEmailEl.textContent = currentUser.email;
-            showAppPage();
+            await showAppPage();
         } else {
             currentUser = null;
             showAuthPage();
