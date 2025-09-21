@@ -430,6 +430,8 @@ const fetchProjects = async () => {
         .order('created_at', { ascending: false });
     if (error) {
         console.error('Error fetching projects:', error.message);
+        alert('Gagal memuat data proyek: ' + error.message + '\n\nPastikan Anda telah menjalankan skrip SQL terbaru untuk mengatur database.');
+        renderProjects([]); // Tampilkan halaman dalam keadaan kosong jika terjadi error
         return;
     }
     renderProjects(data);
@@ -889,4 +891,3 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
-
