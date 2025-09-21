@@ -10,6 +10,7 @@ let isRegisterMode = false;
 let userVenueCategories = [];
 let userVenueNames = [];
 const defaultVenueCategories = ["Panti Jompo", "Yayasan Disabilitas", "Yayasan Kanker", "Umum"];
+const activityTypes = ["Edukasi", "Eksperimen", "Kreasi", "Games", "Ice Breaking"];
 let budgetChartInstance = null;
 let progressChartInstance = null;
 let dashboardBudgetChartInstance = null;
@@ -20,7 +21,7 @@ let ganttChartInstance = null;
 let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     dashboardKPIs, upcomingDeadlinesList, authForm, authTitle, authButton,
     switchAuthModeLink, authPromptText, authError, emailInput, passwordInput,
-    userEmailEl, logoutButton, projectsContainer, addProjectButton,
+    userEmailEl, logoutButton, projectsContainer, addProjectButton, addFirstProjectButton,
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
     detailActivityType, detailVenueCategory, detailVenueName,
@@ -28,15 +29,16 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
     cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
-    projectVenueCategoryInput, venueCategoryList, projectVenueNameInput, venueNameList,
-    taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
-    taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
-    cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
+    projectActivityTypeCheckboxes, projectVenueCategoryInput, venueCategoryList, 
+    projectVenueNameInput, venueNameList, taskModalTitle, taskForm, cancelTaskModal, 
+    taskIdInput, taskNameInput, taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
+    cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection,
+    mainContentContainer, emptyStateContainer;
 
 
 // --- FUNGSI UTILITAS & AUTENTIKASI ---
 const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-const formatDate = (dateString) => new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A';
 
 const toggleAuthMode = () => {
     isRegisterMode = !isRegisterMode;
@@ -122,8 +124,8 @@ const showProjectDetailView = (project) => {
 
 // --- FUNGSI RENDER ---
 
-// Render Dasbor Utama
 const renderDashboard = (projects) => {
+    if (!dashboardContainer) return; // Guard clause
     if (projects.length === 0) {
         dashboardContainer.classList.add('hidden');
         return;
@@ -137,64 +139,57 @@ const renderDashboard = (projects) => {
     const nearingDeadline = projects.filter(p => new Date(p.end_date) >= now && new Date(p.end_date) <= oneWeekFromNow).length;
     dashboardKPIs.innerHTML = `
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-indigo-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Proyek</p><p class="text-xl sm:text-2xl font-bold">${projects.length}</p></div></div>
-        <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-green-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Budget</p><p class="text-xl sm:text-2xl font-bold break-words">${formatCurrency(totalBudget)}</p></div></div>
+        <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-green-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Budget</p><p class="text-xl sm:text-2xl font-bold kpi-value">${formatCurrency(totalBudget)}</p></div></div>
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-yellow-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Sedang Berjalan</p><p class="text-xl sm:text-2xl font-bold">${inProgress}</p></div></div>
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-red-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Deadline < 7 Hari</p><p class="text-xl sm:text-2xl font-bold">${nearingDeadline}</p></div></div>
     `;
-    const sortedByDeadline = projects.filter(p => new Date(p.end_date) >= now).sort((a, b) => new Date(a.end_date) - new Date(b.end_date));
-    upcomingDeadlinesList.innerHTML = '';
-    if (sortedByDeadline.length === 0) {
-        upcomingDeadlinesList.innerHTML = `<p class="text-gray-500 text-center">Tidak ada proyek yang akan datang.</p>`;
-    } else {
-        sortedByDeadline.slice(0, 5).forEach(project => {
-            const remainingDays = Math.ceil((new Date(project.end_date) - now) / (1000 * 60 * 60 * 24));
-            const deadlineEl = document.createElement('div');
-            deadlineEl.className = 'border-l-4 border-indigo-500 pl-3';
-            deadlineEl.innerHTML = `<p class="font-semibold text-gray-800">${project.name}</p><p class="text-sm text-gray-600">${formatDate(project.end_date)} (${remainingDays} hari lagi)</p>`;
-            upcomingDeadlinesList.appendChild(deadlineEl);
-        });
-    }
 
     renderDashboardCharts(projects);
     renderGanttChart(projects);
 };
 
 const renderProjects = (projects) => {
-    renderDashboard(projects);
-    projectsContainer.innerHTML = '';
+    // Logika untuk menampilkan empty state atau konten utama
     if (projects.length === 0) {
-        projectsContainer.innerHTML = `<p class="text-gray-500 col-span-full text-center">Anda belum memiliki proyek. Silakan tambahkan proyek baru.</p>`;
-        return;
-    }
-    
-    projects.forEach(project => {
-        const remainingDays = Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+        mainContentContainer.classList.add('hidden');
+        emptyStateContainer.classList.remove('hidden');
+        renderDashboard(projects); // Panggil untuk menyembunyikan dasbor juga
+    } else {
+        mainContentContainer.classList.remove('hidden');
+        emptyStateContainer.classList.add('hidden');
         
-        let activityBadges = '';
-        if (project.activity_type && Array.isArray(project.activity_type)) {
-            activityBadges = project.activity_type.map(type => 
-                `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${type}</span>`
-            ).join(' ');
-        }
+        renderDashboard(projects);
+        
+        projectsContainer.innerHTML = '';
+        projects.forEach(project => {
+            const remainingDays = Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+            
+            let activityBadges = '';
+            if (project.activity_type && Array.isArray(project.activity_type)) {
+                activityBadges = project.activity_type.map(type => 
+                    `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${type}</span>`
+                ).join(' ');
+            }
 
-        const card = document.createElement('div');
-        card.className = 'bg-white p-5 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer';
-        card.innerHTML = `
-            <div class="flex flex-wrap gap-2 mb-2">
-                ${activityBadges}
-                ${project.venue_category ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200">${project.venue_category}</span>` : ''}
-            </div>
-            <h3 class="font-bold text-lg text-gray-800">${project.name}</h3>
-            ${project.venue_name ? `<p class="text-sm text-gray-500 font-medium">${project.venue_name}</p>` : ''}
-            <p class="text-gray-600 text-sm mt-1 mb-3 truncate">${project.description || 'Tidak ada deskripsi'}</p>
-            <div class="text-sm text-gray-500">
-                <p><strong>Budget:</strong> ${formatCurrency(project.current_budget || project.initial_budget)}</p>
-                <p><strong>Deadline:</strong> ${formatDate(project.end_date)} (${remainingDays >= 0 ? `${remainingDays} hari lagi` : 'Terlambat'})</p>
-            </div>
-        `;
-        card.addEventListener('click', () => showProjectDetailView(project));
-        projectsContainer.appendChild(card);
-    });
+            const card = document.createElement('div');
+            card.className = 'bg-white p-5 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer';
+            card.innerHTML = `
+                <div class="flex flex-wrap gap-2 mb-2">
+                    ${activityBadges}
+                    ${project.venue_category ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200">${project.venue_category}</span>` : ''}
+                </div>
+                <h3 class="font-bold text-lg text-gray-800">${project.name}</h3>
+                ${project.venue_name ? `<p class="text-sm text-gray-500 font-medium">${project.venue_name}</p>` : ''}
+                <p class="text-gray-600 text-sm mt-1 mb-3 truncate">${project.description || 'Tidak ada deskripsi'}</p>
+                <div class="text-sm text-gray-500">
+                    <p><strong>Budget:</strong> ${formatCurrency(project.current_budget || project.initial_budget)}</p>
+                    <p><strong>Deadline:</strong> ${formatDate(project.end_date)} (${remainingDays >= 0 ? `${remainingDays} hari lagi` : 'Terlambat'})</p>
+                </div>
+            `;
+            card.addEventListener('click', () => showProjectDetailView(project));
+            projectsContainer.appendChild(card);
+        });
+    }
 };
 
 const renderProjectDetails = async () => {
@@ -423,18 +418,19 @@ const updateDetailCharts = (tasks) => {
 // --- FUNGSI CRUD, MODAL, EKSPOR, dan INISIALISASI ---
 const fetchProjects = async () => {
     if (!currentUser) return;
-    const { data, error } = await supabaseClient
-        .from('projects')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-    if (error) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('projects')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        renderProjects(data);
+    } catch (error) {
         console.error('Error fetching projects:', error.message);
         alert('Gagal memuat data proyek: ' + error.message + '\n\nPastikan Anda telah menjalankan skrip SQL terbaru untuk mengatur database.');
         renderProjects([]); // Tampilkan halaman dalam keadaan kosong jika terjadi error
-        return;
     }
-    renderProjects(data);
 };
 
 const fetchTasks = async (projectId) => {
@@ -479,6 +475,19 @@ const fetchUserVenueNames = async () => {
     } else {
         userVenueNames = data.map(item => item.venue_name);
     }
+};
+
+const populateActivityTypeCheckboxes = () => {
+    projectActivityTypeCheckboxes.innerHTML = '';
+    activityTypes.forEach(type => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center';
+        div.innerHTML = `
+            <input id="activity-type-${type}" name="project-activity-type" type="checkbox" value="${type}" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            <label for="activity-type-${type}" class="ml-2 block text-sm text-gray-900">${type}</label>
+        `;
+        projectActivityTypeCheckboxes.appendChild(div);
+    });
 };
 
 const populateVenueCategoryDatalist = () => {
@@ -698,7 +707,7 @@ const openProjectModal = (project = null) => {
     projectForm.reset();
     populateVenueCategoryDatalist();
     populateVenueNameDatalist();
-    document.querySelectorAll('input[name="project-activity-type"]').forEach(checkbox => checkbox.checked = false);
+    populateActivityTypeCheckboxes();
 
     if (project) {
         projectModalTitle.textContent = 'Edit Proyek';
@@ -799,6 +808,8 @@ const initializeApp = () => {
     projectsListView = document.getElementById('projects-list-view');
     projectDetailView = document.getElementById('project-detail-view');
     dashboardContainer = document.getElementById('dashboard-container');
+    mainContentContainer = document.getElementById('main-content-container');
+    emptyStateContainer = document.getElementById('empty-state-container');
     dashboardKPIs = document.getElementById('dashboard-kpis');
     upcomingDeadlinesList = document.getElementById('upcoming-deadlines-list');
     authForm = document.getElementById('auth-form');
@@ -813,6 +824,7 @@ const initializeApp = () => {
     logoutButton = document.getElementById('logout-button');
     projectsContainer = document.getElementById('projects-container');
     addProjectButton = document.getElementById('add-project-button');
+    addFirstProjectButton = document.getElementById('add-first-project-button');
     backToProjectsButton = document.getElementById('back-to-projects');
     detailProjectName = document.getElementById('detail-project-name');
     detailProjectDescription = document.getElementById('detail-project-description');
@@ -837,6 +849,7 @@ const initializeApp = () => {
     projectIdInput = document.getElementById('project-id');
     projectNameInput = document.getElementById('project-name');
     projectDescriptionInput = document.getElementById('project-description');
+    projectActivityTypeCheckboxes = document.getElementById('project-activity-type-checkboxes');
     projectVenueCategoryInput = document.getElementById('project-venue-category-input');
     venueCategoryList = document.getElementById('venue-category-list');
     projectVenueNameInput = document.getElementById('project-venue-name-input');
@@ -865,6 +878,7 @@ const initializeApp = () => {
     if(logoutButton) logoutButton.addEventListener('click', handleLogout);
     if(backToProjectsButton) backToProjectsButton.addEventListener('click', showProjectsListView);
     if(addProjectButton) addProjectButton.addEventListener('click', () => openProjectModal());
+    if(addFirstProjectButton) addFirstProjectButton.addEventListener('click', () => openProjectModal());
     if(projectForm) projectForm.addEventListener('submit', handleProjectFormSubmit);
     if(cancelProjectModal) cancelProjectModal.addEventListener('click', closeProjectModal);
     if(deleteProjectButton) deleteProjectButton.addEventListener('click', handleDeleteProject);
@@ -891,3 +905,4 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
