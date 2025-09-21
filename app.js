@@ -415,15 +415,25 @@ const handleDeleteTaskClick = async (event) => {
 
 const openProjectModal = (project = null) => {
     projectForm.reset();
-    projectActivityTypeCheckboxes.innerHTML = '';
-    activityTypes.forEach(type => {
-        projectActivityTypeCheckboxes.innerHTML += `<div><input type="checkbox" id="type-${type}" value="${type}" name="project-activity-type"><label for="type-${type}" class="ml-2">${type}</label></div>`;
-    });
+
+    if (projectActivityTypeCheckboxes) {
+        projectActivityTypeCheckboxes.innerHTML = '';
+        activityTypes.forEach(type => {
+            projectActivityTypeCheckboxes.innerHTML += `<div><input type="checkbox" id="type-${type}" value="${type}" name="project-activity-type"><label for="type-${type}" class="ml-2">${type}</label></div>`;
+        });
+    } else {
+        console.error("Element with ID 'project-activity-type-checkboxes' not found.");
+    }
     
-    projectVenueCategorySelect.innerHTML = '';
-    defaultVenueCategories.forEach(cat => {
-        projectVenueCategorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
+    if (projectVenueCategorySelect) {
+        projectVenueCategorySelect.innerHTML = '';
+        defaultVenueCategories.forEach(cat => {
+            projectVenueCategorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    } else {
+        console.error("Element with ID 'project-venue-category' not found.");
+    }
+
 
     if (project) {
         projectModalTitle.textContent = 'Edit Proyek';
@@ -434,7 +444,9 @@ const openProjectModal = (project = null) => {
             const cb = document.querySelector(`#type-${type}`);
             if (cb) cb.checked = true;
         });
-        projectVenueCategorySelect.value = project.venue_category;
+        if (projectVenueCategorySelect) {
+            projectVenueCategorySelect.value = project.venue_category;
+        }
         projectBudgetInput.parentElement.style.display = 'none';
         projectStartDateInput.value = project.start_date;
         projectEndDateInput.value = project.end_date;
