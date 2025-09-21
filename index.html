@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Custom word-break for long numbers in KPI cards */
         .kpi-value {
             word-break: break-word;
             hyphens: auto;
@@ -62,66 +61,27 @@
 
         <main class="container mx-auto p-4 sm:p-6">
             
-            <!-- Tampilan Daftar Proyek & Dasbor -->
             <div id="projects-list-view" class="space-y-8">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 class="text-2xl font-bold text-gray-900">Dasbor Utama</h2>
                     <button id="add-project-button" class="w-full sm:w-auto px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Tambah Proyek Baru</button>
                 </div>
-
-                <!-- Dasbor KPI dan Chart -->
+                
                 <div id="dashboard-container" class="mb-8">
-                    <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <!-- KPI Cards will be rendered here -->
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                        <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow">
-                            <h4 class="font-semibold text-center mb-2">Ringkasan Budget Proyek</h4>
-                            <div id="dashboard-budget-chart-container" class="chart-container">
-                                <canvas id="dashboard-budget-chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow">
-                            <h4 class="font-semibold text-center mb-2">Status Proyek</h4>
-                            <div id="dashboard-status-chart-container" class="chart-container">
-                                <canvas id="dashboard-status-chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
+                     <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                         <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-center mb-2">Ringkasan Budget Proyek</h4><div class="chart-container"><canvas id="dashboard-budget-chart"></canvas></div></div>
+                         <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-center mb-2">Status Proyek</h4><div class="chart-container"><canvas id="dashboard-status-chart"></canvas></div></div>
+                     </div>
                 </div>
 
-                <!-- Gantt Chart Timeline -->
                 <div id="gantt-chart-section" class="bg-white p-4 rounded-lg shadow mb-8">
                     <h3 class="text-xl font-bold text-gray-900 mb-4">Timeline Proyek</h3>
                     <div class="chart-container h-[400px]"><canvas id="gantt-chart"></canvas></div>
                 </div>
-                
-                <!-- Wrapper untuk Daftar Proyek dan Empty State -->
-                <div id="projects-section">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek</h3>
-                    
-                    <!-- Kontainer untuk kartu-kartu proyek -->
-                    <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Kartu Proyek akan dimuat di sini -->
-                    </div>
 
-                    <!-- Tampilan Kosong (Empty State) -->
-                    <div id="empty-state-container" class="hidden text-center py-16 px-4 bg-white rounded-lg shadow">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                        </svg>
-                        <h3 class="mt-2 text-lg font-medium text-gray-900">Belum ada proyek</h3>
-                        <p class="mt-1 text-sm text-gray-500">Mulai kelola program Anda dengan membuat proyek pertama.</p>
-                        <div class="mt-6">
-                            <button type="button" id="add-first-project-button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                                </svg>
-                                Tambah Proyek Baru
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek</h3>
+                <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
             <!-- Detail Proyek (awalnya tersembunyi) -->
@@ -134,7 +94,6 @@
                            <p id="detail-project-description" class="text-gray-600 mt-1"></p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <button id="copy-project-button" class="flex-1 sm:flex-none px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Salin Program</button>
                             <button id="export-excel-button" class="flex-1 sm:flex-none px-3 py-2 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Export Excel</button>
                             <button id="delete-project-button" class="flex-1 sm:flex-none px-3 py-2 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Hapus</button>
                         </div>
@@ -142,17 +101,12 @@
 
                     <hr class="my-6">
                     
-                    <!-- Detail Proyek -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <h4 class="text-xl font-semibold mb-3">Informasi Proyek</h4>
                             <div class="space-y-3 text-sm">
-                                <div class="flex justify-between items-start">
-                                    <span class="font-medium text-gray-500">Tipe Kegiatan</span>
-                                    <div id="detail-activity-type" class="flex flex-wrap justify-end gap-2 max-w-[70%]"></div>
-                                </div>
+                                <div class="flex justify-between items-start"><span class="font-medium text-gray-500">Tipe Kegiatan</span><div id="detail-activity-type" class="flex flex-wrap justify-end gap-2 max-w-[70%]"></div></div>
                                 <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Kategori Tempat</span><span id="detail-venue-category" class="font-semibold text-gray-800 text-right"></span></div>
-                                <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Nama Tempat</span><span id="detail-venue-name" class="font-semibold text-gray-800 text-right"></span></div>
                                 <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Timeline</span><span id="detail-timeline" class="font-semibold text-gray-800 text-right"></span></div>
                                 <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Budget Awal</span><span id="detail-initial-budget" class="font-semibold text-gray-800"></span></div>
                                 <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Budget Disesuaikan</span><span id="detail-adjusted-budget" class="font-semibold text-gray-800"></span></div>
@@ -167,27 +121,14 @@
                         </div>
                     </div>
                     
-                    <!-- Chart -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-center mb-2">Penggunaan Budget</h4>
-                            <div class="chart-container"><canvas id="budget-chart"></canvas></div>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-center mb-2">Progres Tugas</h4>
-                             <div class="chart-container"><canvas id="progress-chart"></canvas></div>
-                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-center mb-2">Penggunaan Budget</h4><div class="chart-container"><canvas id="budget-chart"></canvas></div></div>
+                        <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-center mb-2">Progres Tugas</h4><div class="chart-container"><canvas id="progress-chart"></canvas></div></div>
                     </div>
 
-                    <!-- Daftar Tugas -->
                     <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="text-xl font-semibold">Daftar Tugas</h4>
-                            <button id="add-task-button" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Tambah Tugas</button>
-                        </div>
-                        <div id="tasks-list" class="space-y-3">
-                            <!-- Daftar tugas akan dimuat di sini -->
-                        </div>
+                        <div class="flex justify-between items-center mb-4"><h4 class="text-xl font-semibold">Daftar Tugas</h4><button id="add-task-button" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Tambah Tugas</button></div>
+                        <div id="tasks-list" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
@@ -200,43 +141,22 @@
             <h3 id="project-modal-title" class="text-2xl font-bold mb-6">Tambah Proyek Baru</h3>
             <form id="project-form" class="space-y-4">
                 <input type="hidden" id="project-id">
-                <div>
-                    <label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label>
-                    <input type="text" id="project-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                 <div>
-                    <label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                    <textarea id="project-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                </div>
+                <div><label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label><input type="text" id="project-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                <div><label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi</label><textarea id="project-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea></div>
                 <div>
                     <span class="block text-sm font-medium text-gray-700">Tipe Kegiatan</span>
-                    <div id="project-activity-type-checkboxes" class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <!-- Checkboxes will be rendered here -->
-                    </div>
+                    <div id="project-activity-type-checkboxes" class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
                 </div>
                 <div>
-                     <label for="project-venue-category-input" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
-                     <input list="venue-category-list" id="project-venue-category-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Pilih atau ketik baru...">
-                     <datalist id="venue-category-list"></datalist>
+                    <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
+                    <select id="project-venue-category" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <!-- Opsi akan ditambahkan oleh JS -->
+                    </select>
                 </div>
-                <div>
-                     <label for="project-venue-name-input" class="block text-sm font-medium text-gray-700">Nama Tempat Spesifik (Opsional)</label>
-                     <input list="venue-name-list" id="project-venue-name-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tulis nama tempat atau pilih...">
-                     <datalist id="venue-name-list"></datalist>
-                </div>
-                <div>
-                    <label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label>
-                    <input type="number" id="project-budget" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
+                <div><label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label><input type="number" id="project-budget" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
-                        <input type="date" id="project-start-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label for="project-end-date" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label>
-                        <input type="date" id="project-end-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
+                    <div><label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label><input type="date" id="project-start-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
+                    <div><label for="project-end-date" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label><input type="date" id="project-end-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
                 </div>
                 <div class="flex justify-end gap-4 pt-4">
                     <button type="button" id="cancel-project-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button>
@@ -246,52 +166,12 @@
         </div>
     </div>
     
-    <!-- Modal Tambah/Edit Tugas -->
+    <!-- Modal lainnya tetap sama... -->
     <div id="task-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg">
-            <h3 id="task-modal-title" class="text-2xl font-bold mb-6">Tambah Tugas Baru</h3>
-            <form id="task-form" class="space-y-4">
-                <input type="hidden" id="task-id">
-                <div>
-                    <label for="task-name" class="block text-sm font-medium text-gray-700">Nama Tugas</label>
-                    <input type="text" id="task-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="task-cost" class="block text-sm font-medium text-gray-700">Biaya (Rp)</label>
-                    <input type="number" id="task-cost" required value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="task-status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="task-status" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="Belum Dikerjakan">Belum Dikerjakan</option>
-                        <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
-                        <option value="Selesai">Selesai</option>
-                    </select>
-                </div>
-                <div class="flex justify-end gap-4 pt-4">
-                    <button type="button" id="cancel-task-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Simpan</button>
-                </div>
-            </form>
-        </div>
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg"><h3 id="task-modal-title" class="text-2xl font-bold mb-6">Tambah Tugas Baru</h3><form id="task-form" class="space-y-4"><input type="hidden" id="task-id"><div><label for="task-name" class="block text-sm font-medium text-gray-700">Nama Tugas</label><input type="text" id="task-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div><div><label for="task-cost" class="block text-sm font-medium text-gray-700">Biaya (Rp)</label><input type="number" id="task-cost" required value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div><div><label for="task-status" class="block text-sm font-medium text-gray-700">Status</label><select id="task-status" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="Belum Dikerjakan">Belum Dikerjakan</option><option value="Sedang Dikerjakan">Sedang Dikerjakan</option><option value="Selesai">Selesai</option></select></div><div class="flex justify-end gap-4 pt-4"><button type="button" id="cancel-task-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Simpan</button></div></form></div>
     </div>
-    
-    <!-- Modal Tambah/Kurangi Budget -->
     <div id="add-budget-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Ubah Budget</h3>
-            <form id="add-budget-form" class="space-y-4">
-                 <p class="text-sm text-gray-600">Masukkan jumlah positif untuk menambah, atau jumlah negatif (misal: -50000) untuk mengurangi.</p>
-                <div>
-                    <label for="add-budget-amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label>
-                    <input type="number" id="add-budget-amount" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: -50000">
-                </div>
-                <div class="flex justify-end gap-4 pt-4">
-                    <button type="button" id="cancel-add-budget-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Simpan</button>
-                </div>
-            </form>
-        </div>
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Ubah Budget</h3><form id="add-budget-form" class="space-y-4"><p class="text-sm text-gray-600">Masukkan jumlah positif untuk menambah, atau jumlah negatif (misal: -50000) untuk mengurangi.</p><div><label for="add-budget-amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label><input type="number" id="add-budget-amount" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: -50000"></div><div class="flex justify-end gap-4 pt-4"><button type="button" id="cancel-add-budget-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Simpan</button></div></form></div>
     </div>
     
     <script src="app.js"></script>
