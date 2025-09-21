@@ -69,52 +69,57 @@
                     <button id="add-project-button" class="w-full sm:w-auto px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Tambah Proyek Baru</button>
                 </div>
 
-                <!-- Kontainer untuk Dasbor, Daftar Proyek, dan Gantt Chart -->
-                <div id="main-content-container">
-                    <!-- Dasbor KPI dan Chart -->
-                    <div id="dashboard-container" class="mb-8">
-                        <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <!-- KPI Cards will be rendered here -->
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                            <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow">
-                                <h4 class="font-semibold text-center mb-2">Ringkasan Budget Proyek</h4>
-                                <div class="chart-container"><canvas id="dashboard-budget-chart"></canvas></div>
-                            </div>
-                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow">
-                                <h4 class="font-semibold text-center mb-2">Status Proyek</h4>
-                                <div class="chart-container"><canvas id="dashboard-status-chart"></canvas></div>
+                <!-- Dasbor KPI dan Chart -->
+                <div id="dashboard-container" class="mb-8">
+                    <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <!-- KPI Cards will be rendered here -->
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold text-center mb-2">Ringkasan Budget Proyek</h4>
+                            <div id="dashboard-budget-chart-container" class="chart-container">
+                                <canvas id="dashboard-budget-chart"></canvas>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Gantt Chart Timeline -->
-                    <div id="gantt-chart-section" class="bg-white p-4 rounded-lg shadow mb-8">
-                        <h3 class="text-xl font-bold text-gray-900 mb-4">Timeline Proyek</h3>
-                        <div class="chart-container h-[400px]"><canvas id="gantt-chart"></canvas></div>
-                    </div>
-                    
-                    <!-- Daftar Proyek -->
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek</h3>
-                    <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Kartu Proyek akan dimuat di sini -->
+                        <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold text-center mb-2">Status Proyek</h4>
+                            <div id="dashboard-status-chart-container" class="chart-container">
+                                <canvas id="dashboard-status-chart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Tampilan Kosong (Empty State) -->
-                <div id="empty-state-container" class="hidden text-center py-16 px-4">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                    </svg>
-                    <h3 class="mt-2 text-lg font-medium text-gray-900">Belum ada proyek</h3>
-                    <p class="mt-1 text-sm text-gray-500">Mulai kelola program Anda dengan membuat proyek pertama.</p>
-                    <div class="mt-6">
-                        <button type="button" id="add-first-project-button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                            Tambah Proyek Baru
-                        </button>
+                <!-- Gantt Chart Timeline -->
+                <div id="gantt-chart-section" class="bg-white p-4 rounded-lg shadow mb-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Timeline Proyek</h3>
+                    <div class="chart-container h-[400px]"><canvas id="gantt-chart"></canvas></div>
+                </div>
+                
+                <!-- Wrapper untuk Daftar Proyek dan Empty State -->
+                <div id="projects-section">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek</h3>
+                    
+                    <!-- Kontainer untuk kartu-kartu proyek -->
+                    <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Kartu Proyek akan dimuat di sini -->
+                    </div>
+
+                    <!-- Tampilan Kosong (Empty State) -->
+                    <div id="empty-state-container" class="hidden text-center py-16 px-4 bg-white rounded-lg shadow">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        </svg>
+                        <h3 class="mt-2 text-lg font-medium text-gray-900">Belum ada proyek</h3>
+                        <p class="mt-1 text-sm text-gray-500">Mulai kelola program Anda dengan membuat proyek pertama.</p>
+                        <div class="mt-6">
+                            <button type="button" id="add-first-project-button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                                Tambah Proyek Baru
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
