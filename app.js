@@ -8,6 +8,7 @@ let currentUser = null;
 let currentProject = null;
 let isRegisterMode = false;
 let userVenueCategories = [];
+let userVenueNames = [];
 const defaultVenueCategories = ["Panti Jompo", "Yayasan Disabilitas", "Yayasan Kanker", "Umum"];
 let budgetChartInstance = null;
 let progressChartInstance = null;
@@ -22,12 +23,12 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     userEmailEl, logoutButton, projectsContainer, addProjectButton,
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
-    detailActivityType, detailVenueCategory,
+    detailActivityType, detailVenueCategory, detailVenueName,
     projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton, copyProjectButton,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
     cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
-    projectVenueCategoryInput, venueCategoryList,
+    projectVenueCategoryInput, venueCategoryList, projectVenueNameInput, venueNameList,
     taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
     taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
@@ -100,6 +101,7 @@ const showAppPage = async () => {
     authPage.classList.add('hidden');
     appPage.classList.remove('hidden');
     await fetchUserVenueCategories();
+    await fetchUserVenueNames();
     showProjectsListView();
 };
 
@@ -183,6 +185,7 @@ const renderProjects = (projects) => {
                 ${project.venue_category ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200">${project.venue_category}</span>` : ''}
             </div>
             <h3 class="font-bold text-lg text-gray-800">${project.name}</h3>
+            ${project.venue_name ? `<p class="text-sm text-gray-500 font-medium">${project.venue_name}</p>` : ''}
             <p class="text-gray-600 text-sm mt-1 mb-3 truncate">${project.description || 'Tidak ada deskripsi'}</p>
             <div class="text-sm text-gray-500">
                 <p><strong>Budget:</strong> ${formatCurrency(project.current_budget || project.initial_budget)}</p>
@@ -209,6 +212,7 @@ const renderProjectDetails = async () => {
     }
     detailActivityType.innerHTML = activityBadges;
     detailVenueCategory.textContent = currentProject.venue_category || 'Tidak ada kategori';
+    detailVenueName.textContent = currentProject.venue_name || '';
     
     detailInitialBudget.textContent = formatCurrency(currentProject.initial_budget);
     detailAdjustedBudget.textContent = formatCurrency(currentProject.current_budget || currentProject.initial_budget);
@@ -460,6 +464,21 @@ const fetchUserVenueCategories = async () => {
     }
 };
 
+const fetchUserVenueNames = async () => {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+        .from('user_venue_names')
+        .select('venue_name')
+        .eq('user_id', currentUser.id);
+
+    if (error) {
+        console.error('Error fetching venue names:', error);
+        userVenueNames = [];
+    } else {
+        userVenueNames = data.map(item => item.venue_name);
+    }
+};
+
 const populateVenueCategoryDatalist = () => {
     venueCategoryList.innerHTML = '';
     userVenueCategories.forEach(category => {
@@ -468,6 +487,16 @@ const populateVenueCategoryDatalist = () => {
         venueCategoryList.appendChild(option);
     });
 };
+
+const populateVenueNameDatalist = () => {
+    venueNameList.innerHTML = '';
+    userVenueNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        venueNameList.appendChild(option);
+    });
+};
+
 
 const handleProjectFormSubmit = async (event) => {
     event.preventDefault();
@@ -480,6 +509,7 @@ const handleProjectFormSubmit = async (event) => {
     });
 
     const venueCategoryValue = projectVenueCategoryInput.value.trim();
+    const venueNameValue = projectVenueNameInput.value.trim();
 
     const projectData = {
         name: projectNameInput.value,
@@ -488,6 +518,7 @@ const handleProjectFormSubmit = async (event) => {
         end_date: projectEndDateInput.value,
         activity_type: selectedActivities,
         venue_category: venueCategoryValue,
+        venue_name: venueNameValue,
         user_id: currentUser.id
     };
 
@@ -507,16 +538,14 @@ const handleProjectFormSubmit = async (event) => {
         console.error('Error saving project:', response.error.message);
         alert('Gagal menyimpan proyek: ' + response.error.message);
     } else {
-        // Check if the venue category is new and save it
+        // Simpan kategori dan nama tempat baru jika belum ada
         if (venueCategoryValue && !userVenueCategories.includes(venueCategoryValue)) {
-            const { error: insertError } = await supabaseClient
-                .from('user_venue_categories')
-                .insert({ user_id: currentUser.id, category_name: venueCategoryValue });
-            if (insertError) {
-                console.error('Failed to save new venue category:', insertError); // Log error but don't block UI
-            } else {
-                await fetchUserVenueCategories(); // Refresh categories list
-            }
+            await supabaseClient.from('user_venue_categories').insert({ user_id: currentUser.id, category_name: venueCategoryValue });
+            await fetchUserVenueCategories();
+        }
+        if (venueNameValue && !userVenueNames.includes(venueNameValue)) {
+            await supabaseClient.from('user_venue_names').insert({ user_id: currentUser.id, venue_name: venueNameValue });
+            await fetchUserVenueNames();
         }
         closeProjectModal();
         fetchProjects();
@@ -591,27 +620,15 @@ const handleCopyProject = async () => {
     }
 
     try {
-        // 1. Fetch tasks from the original project
         const tasksToCopy = await fetchTasks(currentProject.id);
+        const newProjectData = { ...currentProject, name: `Salinan dari ${currentProject.name}` };
+        delete newProjectData.id;
+        delete newProjectData.created_at;
 
-        // 2. Create the new project data
-        const newProjectData = {
-            ...currentProject,
-            name: `Salinan dari ${currentProject.name}`,
-        };
-        delete newProjectData.id; // remove old id
-        delete newProjectData.created_at; // let database set new timestamp
-
-        // 3. Insert the new project and get its ID
         const { data: newProject, error: projectError } = await supabaseClient
-            .from('projects')
-            .insert(newProjectData)
-            .select()
-            .single();
-
+            .from('projects').insert(newProjectData).select().single();
         if (projectError) throw projectError;
         
-        // 4. If project copy is successful and there are tasks, copy tasks
         if (newProject && tasksToCopy.length > 0) {
             const newTasksData = tasksToCopy.map(task => {
                 const newTask = { ...task, project_id: newProject.id };
@@ -619,14 +636,11 @@ const handleCopyProject = async () => {
                 delete newTask.created_at;
                 return newTask;
             });
-
             const { error: tasksError } = await supabaseClient.from('tasks').insert(newTasksData);
             if (tasksError) throw tasksError;
         }
-
         alert(`Proyek "${newProject.name}" berhasil dibuat sebagai templat.`);
         showProjectsListView();
-
     } catch (error) {
         console.error('Error copying project:', error.message);
         alert('Gagal menyalin program: ' + error.message);
@@ -681,6 +695,7 @@ const handleDeleteTaskClick = async (event) => {
 const openProjectModal = (project = null) => {
     projectForm.reset();
     populateVenueCategoryDatalist();
+    populateVenueNameDatalist();
     document.querySelectorAll('input[name="project-activity-type"]').forEach(checkbox => checkbox.checked = false);
 
     if (project) {
@@ -697,6 +712,7 @@ const openProjectModal = (project = null) => {
         }
 
         projectVenueCategoryInput.value = project.venue_category || '';
+        projectVenueNameInput.value = project.venue_name || '';
         projectBudgetInput.parentElement.style.display = 'none';
         projectStartDateInput.value = project.start_date;
         projectEndDateInput.value = project.end_date;
@@ -756,6 +772,7 @@ const handleExportToExcel = async () => {
         { A: "Nama Proyek", B: currentProject.name },
         { A: "Tipe Kegiatan", B: currentProject.activity_type ? currentProject.activity_type.join(', ') : '' },
         { A: "Kategori Tempat", B: currentProject.venue_category },
+        { A: "Nama Tempat", B: currentProject.venue_name },
         { A: "Deskripsi", B: currentProject.description },
         { A: "Timeline", B: `${formatDate(currentProject.start_date)} - ${formatDate(currentProject.end_date)}` },
         { A: "Budget Awal", B: formatCurrency(currentProject.initial_budget) }, { A: "Budget Disesuaikan", B: formatCurrency(currentBudget) },
@@ -799,6 +816,7 @@ const initializeApp = () => {
     detailProjectDescription = document.getElementById('detail-project-description');
     detailActivityType = document.getElementById('detail-activity-type');
     detailVenueCategory = document.getElementById('detail-venue-category');
+    detailVenueName = document.getElementById('detail-venue-name');
     detailInitialBudget = document.getElementById('detail-initial-budget');
     detailAdjustedBudget = document.getElementById('detail-adjusted-budget');
     detailCurrentBudget = document.getElementById('detail-current-budget');
@@ -819,6 +837,8 @@ const initializeApp = () => {
     projectDescriptionInput = document.getElementById('project-description');
     projectVenueCategoryInput = document.getElementById('project-venue-category-input');
     venueCategoryList = document.getElementById('venue-category-list');
+    projectVenueNameInput = document.getElementById('project-venue-name-input');
+    venueNameList = document.getElementById('venue-name-list');
     projectBudgetInput = document.getElementById('project-budget');
     projectStartDateInput = document.getElementById('project-start-date');
     projectEndDateInput = document.getElementById('project-end-date');
