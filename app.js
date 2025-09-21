@@ -272,7 +272,10 @@ const renderGanttChart = (projects) => {
     ganttChartInstance = new Chart(ganttCtx, {
         type: 'bar',
         data: {
-            labels: validProjects.map(p => p.name),
+            labels: validProjects.map(p => {
+                const types = p.activity_type && p.activity_type.length > 0 ? `(${p.activity_type.join(', ')})` : '';
+                return `${p.name} ${types}`;
+            }),
             datasets: [{
                 label: 'Durasi Proyek',
                 data: validProjects.map(p => [new Date(p.start_date), new Date(p.end_date)]),
