@@ -111,7 +111,11 @@
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                         <div class="mb-4 sm:mb-0 w-full sm:w-auto">
                            <h3 id="detail-project-name" class="text-2xl sm:text-3xl font-bold text-gray-900 break-words"></h3>
-                           <p id="detail-project-description" class="text-gray-600 mt-1"></p>
+                           <div class="flex flex-wrap gap-2 mt-2">
+                               <span id="detail-activity-type" class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200"></span>
+                               <span id="detail-venue-category" class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200"></span>
+                           </div>
+                           <p id="detail-project-description" class="text-gray-600 mt-2"></p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                             <button id="open-add-budget-button" class="w-full sm:w-auto flex-grow sm:flex-grow-0 px-3 py-1.5 text-sm font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Ubah Budget</button>
@@ -164,6 +168,29 @@
                 <input type="hidden" id="project-id">
                 <div class="mb-4"><label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label><input type="text" id="project-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></div>
                 <div class="mb-4"><label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi</label><textarea id="project-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></textarea></div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="project-activity-type" class="block text-sm font-medium text-gray-700">Tipe Kegiatan</label>
+                        <select id="project-activity-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm">
+                            <option value="Edukasi">Edukasi</option>
+                            <option value="Eksperimen">Eksperimen</option>
+                            <option value="Kreasi">Kreasi</option>
+                            <option value="Games">Games</option>
+                            <option value="Ice Breaking">Ice Breaking</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
+                        <select id="project-venue-category" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm">
+                            <option value="Panti Jompo">Panti Jompo</option>
+                            <option value="Yayasan Disabilitas">Yayasan Disabilitas</option>
+                            <option value="Yayasan Kanker">Yayasan Kanker</option>
+                            <option value="Umum">Umum</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="mb-4"><label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label><input type="number" id="project-budget" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div><label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label><input type="date" id="project-start-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></div>
@@ -212,3 +239,4 @@
     <script src="app.js"></script>
 </body>
 </html>
+
