@@ -25,7 +25,7 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
     cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
-    projectActivityTypeInput, projectVenueCategoryInput,
+    projectVenueCategoryInput,
     taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
     taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
@@ -164,11 +164,19 @@ const renderProjects = (projects) => {
     
     projects.forEach(project => {
         const remainingDays = Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+        
+        let activityBadges = '';
+        if (project.activity_type && Array.isArray(project.activity_type)) {
+            activityBadges = project.activity_type.map(type => 
+                `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${type}</span>`
+            ).join(' ');
+        }
+
         const card = document.createElement('div');
         card.className = 'bg-white p-5 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer';
         card.innerHTML = `
             <div class="flex flex-wrap gap-2 mb-2">
-                ${project.activity_type ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${project.activity_type}</span>` : ''}
+                ${activityBadges}
                 ${project.venue_category ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200">${project.venue_category}</span>` : ''}
             </div>
             <h3 class="font-bold text-lg text-gray-800">${project.name}</h3>
@@ -188,7 +196,15 @@ const renderProjectDetails = async () => {
     detailProjectName.textContent = currentProject.name;
     detailProjectDescription.textContent = currentProject.description || '';
     
-    detailActivityType.textContent = currentProject.activity_type || 'Tidak ada tipe';
+    let activityBadges = '';
+    if (currentProject.activity_type && Array.isArray(currentProject.activity_type)) {
+        activityBadges = currentProject.activity_type.map(type => 
+            `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${type}</span>`
+        ).join(' ');
+    } else {
+        activityBadges = `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-gray-500 bg-gray-200">Tidak ada tipe</span>`;
+    }
+    detailActivityType.innerHTML = activityBadges;
     detailVenueCategory.textContent = currentProject.venue_category || 'Tidak ada kategori';
     
     detailInitialBudget.textContent = formatCurrency(currentProject.initial_budget);
@@ -426,12 +442,18 @@ const handleProjectFormSubmit = async (event) => {
     event.preventDefault();
     const isUpdate = !!projectIdInput.value;
     const initialBudget = parseFloat(projectBudgetInput.value);
+
+    const selectedActivities = [];
+    document.querySelectorAll('input[name="project-activity-type"]:checked').forEach(checkbox => {
+        selectedActivities.push(checkbox.value);
+    });
+
     const projectData = {
         name: projectNameInput.value,
         description: projectDescriptionInput.value,
         start_date: projectStartDateInput.value,
         end_date: projectEndDateInput.value,
-        activity_type: projectActivityTypeInput.value,
+        activity_type: selectedActivities, // Simpan sebagai array
         venue_category: projectVenueCategoryInput.value,
         user_id: currentUser.id
     };
@@ -572,12 +594,21 @@ const handleDeleteTaskClick = async (event) => {
 
 const openProjectModal = (project = null) => {
     projectForm.reset();
+    document.querySelectorAll('input[name="project-activity-type"]').forEach(checkbox => checkbox.checked = false);
+
     if (project) {
         projectModalTitle.textContent = 'Edit Proyek';
         projectIdInput.value = project.id;
         projectNameInput.value = project.name;
         projectDescriptionInput.value = project.description;
-        projectActivityTypeInput.value = project.activity_type || 'Edukasi';
+        
+        if (project.activity_type && Array.isArray(project.activity_type)) {
+            project.activity_type.forEach(type => {
+                const checkbox = document.querySelector(`input[name="project-activity-type"][value="${type}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
         projectVenueCategoryInput.value = project.venue_category || 'Panti Jompo';
         projectBudgetInput.parentElement.style.display = 'none';
         projectStartDateInput.value = project.start_date;
@@ -636,7 +667,7 @@ const handleExportToExcel = async () => {
     const currentBudget = currentProject.current_budget || currentProject.initial_budget;
     const projectSummary = [
         { A: "Nama Proyek", B: currentProject.name },
-        { A: "Tipe Kegiatan", B: currentProject.activity_type },
+        { A: "Tipe Kegiatan", B: currentProject.activity_type ? currentProject.activity_type.join(', ') : '' },
         { A: "Kategori Tempat", B: currentProject.venue_category },
         { A: "Deskripsi", B: currentProject.description },
         { A: "Timeline", B: `${formatDate(currentProject.start_date)} - ${formatDate(currentProject.end_date)}` },
@@ -698,7 +729,6 @@ const initializeApp = () => {
     projectIdInput = document.getElementById('project-id');
     projectNameInput = document.getElementById('project-name');
     projectDescriptionInput = document.getElementById('project-description');
-    projectActivityTypeInput = document.getElementById('project-activity-type');
     projectVenueCategoryInput = document.getElementById('project-venue-category');
     projectBudgetInput = document.getElementById('project-budget');
     projectStartDateInput = document.getElementById('project-start-date');
