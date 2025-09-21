@@ -20,10 +20,12 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     userEmailEl, logoutButton, projectsContainer, addProjectButton,
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
+    detailActivityType, detailVenueCategory,
     projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
     cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
+    projectActivityTypeInput, projectVenueCategoryInput,
     taskModalTitle, taskForm, cancelTaskModal, taskIdInput, taskNameInput,
     taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
@@ -165,6 +167,10 @@ const renderProjects = (projects) => {
         const card = document.createElement('div');
         card.className = 'bg-white p-5 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer';
         card.innerHTML = `
+            <div class="flex flex-wrap gap-2 mb-2">
+                ${project.activity_type ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-teal-600 bg-teal-200">${project.activity_type}</span>` : ''}
+                ${project.venue_category ? `<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-200">${project.venue_category}</span>` : ''}
+            </div>
             <h3 class="font-bold text-lg text-gray-800">${project.name}</h3>
             <p class="text-gray-600 text-sm mt-1 mb-3 truncate">${project.description || 'Tidak ada deskripsi'}</p>
             <div class="text-sm text-gray-500">
@@ -181,6 +187,10 @@ const renderProjectDetails = async () => {
     if (!currentProject) return;
     detailProjectName.textContent = currentProject.name;
     detailProjectDescription.textContent = currentProject.description || '';
+    
+    detailActivityType.textContent = currentProject.activity_type || 'Tidak ada tipe';
+    detailVenueCategory.textContent = currentProject.venue_category || 'Tidak ada kategori';
+    
     detailInitialBudget.textContent = formatCurrency(currentProject.initial_budget);
     detailAdjustedBudget.textContent = formatCurrency(currentProject.current_budget || currentProject.initial_budget);
     detailTimeline.textContent = `${formatDate(currentProject.start_date)} - ${formatDate(currentProject.end_date)}`;
@@ -421,6 +431,8 @@ const handleProjectFormSubmit = async (event) => {
         description: projectDescriptionInput.value,
         start_date: projectStartDateInput.value,
         end_date: projectEndDateInput.value,
+        activity_type: projectActivityTypeInput.value,
+        venue_category: projectVenueCategoryInput.value,
         user_id: currentUser.id
     };
     if (!isUpdate) {
@@ -565,6 +577,8 @@ const openProjectModal = (project = null) => {
         projectIdInput.value = project.id;
         projectNameInput.value = project.name;
         projectDescriptionInput.value = project.description;
+        projectActivityTypeInput.value = project.activity_type || 'Edukasi';
+        projectVenueCategoryInput.value = project.venue_category || 'Panti Jompo';
         projectBudgetInput.parentElement.style.display = 'none';
         projectStartDateInput.value = project.start_date;
         projectEndDateInput.value = project.end_date;
@@ -621,7 +635,10 @@ const handleExportToExcel = async () => {
     const totalCost = tasks.reduce((sum, task) => sum + task.cost, 0);
     const currentBudget = currentProject.current_budget || currentProject.initial_budget;
     const projectSummary = [
-        { A: "Nama Proyek", B: currentProject.name }, { A: "Deskripsi", B: currentProject.description },
+        { A: "Nama Proyek", B: currentProject.name },
+        { A: "Tipe Kegiatan", B: currentProject.activity_type },
+        { A: "Kategori Tempat", B: currentProject.venue_category },
+        { A: "Deskripsi", B: currentProject.description },
         { A: "Timeline", B: `${formatDate(currentProject.start_date)} - ${formatDate(currentProject.end_date)}` },
         { A: "Budget Awal", B: formatCurrency(currentProject.initial_budget) }, { A: "Budget Disesuaikan", B: formatCurrency(currentBudget) },
         { A: "Total Biaya Tugas", B: formatCurrency(totalCost) }, { A: "Sisa Budget", B: formatCurrency(currentBudget - totalCost) },
@@ -662,6 +679,8 @@ const initializeApp = () => {
     backToProjectsButton = document.getElementById('back-to-projects');
     detailProjectName = document.getElementById('detail-project-name');
     detailProjectDescription = document.getElementById('detail-project-description');
+    detailActivityType = document.getElementById('detail-activity-type');
+    detailVenueCategory = document.getElementById('detail-venue-category');
     detailInitialBudget = document.getElementById('detail-initial-budget');
     detailAdjustedBudget = document.getElementById('detail-adjusted-budget');
     detailCurrentBudget = document.getElementById('detail-current-budget');
@@ -679,6 +698,8 @@ const initializeApp = () => {
     projectIdInput = document.getElementById('project-id');
     projectNameInput = document.getElementById('project-name');
     projectDescriptionInput = document.getElementById('project-description');
+    projectActivityTypeInput = document.getElementById('project-activity-type');
+    projectVenueCategoryInput = document.getElementById('project-venue-category');
     projectBudgetInput = document.getElementById('project-budget');
     projectStartDateInput = document.getElementById('project-start-date');
     projectEndDateInput = document.getElementById('project-end-date');
@@ -728,3 +749,4 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
