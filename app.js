@@ -27,13 +27,13 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     detailActivityType, detailVenueCategory, detailVenueName,
     projectNotes, saveNotesButton, deleteProjectButton, exportExcelButton, copyProjectButton,
     tasksList, addTaskButton, projectModal, projectModalTitle, projectForm,
-    cancelProjectModal, projectIdInput, projectNameInput, projectDescriptionInput,
+    cancelModal, projectIdInput, projectNameInput, projectDescriptionInput,
     projectBudgetInput, projectStartDateInput, projectEndDateInput, taskModal,
     projectActivityTypeCheckboxes, projectVenueCategoryInput, venueCategoryList, 
     projectVenueNameInput, venueNameList, taskModalTitle, taskForm, cancelTaskModal, 
     taskIdInput, taskNameInput, taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection,
-    mainContentContainer, emptyStateContainer;
+    projectsSection, emptyStateContainer, dashboardBudgetChartContainer, dashboardStatusChartContainer;
 
 
 // --- FUNGSI UTILITAS & AUTENTIKASI ---
@@ -124,41 +124,40 @@ const showProjectDetailView = (project) => {
 
 // --- FUNGSI RENDER ---
 
-const renderDashboard = (projects) => {
-    if (!dashboardContainer) return; // Guard clause
-    if (projects.length === 0) {
-        dashboardContainer.classList.add('hidden');
-        return;
-    }
-    dashboardContainer.classList.remove('hidden');
-    
+const renderDashboard = (projects = []) => {
     const now = new Date();
     const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const totalProjects = projects.length;
     const totalBudget = projects.reduce((sum, p) => sum + (p.current_budget || p.initial_budget), 0);
     const inProgress = projects.filter(p => new Date(p.end_date) >= now).length;
     const nearingDeadline = projects.filter(p => new Date(p.end_date) >= now && new Date(p.end_date) <= oneWeekFromNow).length;
+
     dashboardKPIs.innerHTML = `
-        <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-indigo-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Proyek</p><p class="text-xl sm:text-2xl font-bold">${projects.length}</p></div></div>
+        <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-indigo-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Proyek</p><p class="text-xl sm:text-2xl font-bold">${totalProjects}</p></div></div>
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-green-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Total Budget</p><p class="text-xl sm:text-2xl font-bold kpi-value">${formatCurrency(totalBudget)}</p></div></div>
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-yellow-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Sedang Berjalan</p><p class="text-xl sm:text-2xl font-bold">${inProgress}</p></div></div>
         <div class="bg-white p-4 rounded-lg shadow flex items-start"><div class="bg-red-100 rounded-full p-3 mr-3"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div><div class="flex-1 min-w-0"><p class="text-sm text-gray-500 truncate">Deadline < 7 Hari</p><p class="text-xl sm:text-2xl font-bold">${nearingDeadline}</p></div></div>
     `;
 
-    renderDashboardCharts(projects);
-    renderGanttChart(projects);
+    // Sembunyikan chart jika tidak ada data
+    if (totalProjects === 0) {
+        dashboardBudgetChartContainer.classList.add('hidden');
+        dashboardStatusChartContainer.classList.add('hidden');
+    } else {
+        dashboardBudgetChartContainer.classList.remove('hidden');
+        dashboardStatusChartContainer.classList.remove('hidden');
+        renderDashboardCharts(projects);
+    }
 };
 
-const renderProjects = (projects) => {
-    // Logika untuk menampilkan empty state atau konten utama
+const renderProjectCards = (projects) => {
+    // Logika untuk menampilkan empty state atau daftar proyek
     if (projects.length === 0) {
-        mainContentContainer.classList.add('hidden');
+        projectsContainer.classList.add('hidden');
         emptyStateContainer.classList.remove('hidden');
-        renderDashboard(projects); // Panggil untuk menyembunyikan dasbor juga
     } else {
-        mainContentContainer.classList.remove('hidden');
+        projectsContainer.classList.remove('hidden');
         emptyStateContainer.classList.add('hidden');
-        
-        renderDashboard(projects);
         
         projectsContainer.innerHTML = '';
         projects.forEach(project => {
@@ -425,11 +424,17 @@ const fetchProjects = async () => {
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
         if (error) throw error;
-        renderProjects(data);
+        
+        // Selalu render dasbor, lalu render daftar proyek atau empty state
+        renderDashboard(data);
+        renderGanttChart(data);
+        renderProjectCards(data);
+
     } catch (error) {
         console.error('Error fetching projects:', error.message);
         alert('Gagal memuat data proyek: ' + error.message + '\n\nPastikan Anda telah menjalankan skrip SQL terbaru untuk mengatur database.');
-        renderProjects([]); // Tampilkan halaman dalam keadaan kosong jika terjadi error
+        renderDashboard([]); // Tampilkan dasbor kosong jika terjadi error
+        renderProjectCards([]); // Tampilkan empty state jika terjadi error
     }
 };
 
@@ -808,10 +813,11 @@ const initializeApp = () => {
     projectsListView = document.getElementById('projects-list-view');
     projectDetailView = document.getElementById('project-detail-view');
     dashboardContainer = document.getElementById('dashboard-container');
-    mainContentContainer = document.getElementById('main-content-container');
+    projectsSection = document.getElementById('projects-section');
     emptyStateContainer = document.getElementById('empty-state-container');
     dashboardKPIs = document.getElementById('dashboard-kpis');
-    upcomingDeadlinesList = document.getElementById('upcoming-deadlines-list');
+    dashboardBudgetChartContainer = document.getElementById('dashboard-budget-chart-container');
+    dashboardStatusChartContainer = document.getElementById('dashboard-status-chart-container');
     authForm = document.getElementById('auth-form');
     authTitle = document.getElementById('auth-title');
     authButton = document.getElementById('auth-button');
@@ -845,7 +851,7 @@ const initializeApp = () => {
     projectModal = document.getElementById('project-modal');
     projectModalTitle = document.getElementById('project-modal-title');
     projectForm = document.getElementById('project-form');
-    cancelProjectModal = document.getElementById('cancel-project-modal');
+    cancelModal = document.getElementById('cancel-project-modal');
     projectIdInput = document.getElementById('project-id');
     projectNameInput = document.getElementById('project-name');
     projectDescriptionInput = document.getElementById('project-description');
@@ -880,7 +886,7 @@ const initializeApp = () => {
     if(addProjectButton) addProjectButton.addEventListener('click', () => openProjectModal());
     if(addFirstProjectButton) addFirstProjectButton.addEventListener('click', () => openProjectModal());
     if(projectForm) projectForm.addEventListener('submit', handleProjectFormSubmit);
-    if(cancelProjectModal) cancelProjectModal.addEventListener('click', closeProjectModal);
+    if(cancelModal) cancelModal.addEventListener('click', closeProjectModal);
     if(deleteProjectButton) deleteProjectButton.addEventListener('click', handleDeleteProject);
     if(copyProjectButton) copyProjectButton.addEventListener('click', handleCopyProject);
     if(saveNotesButton) saveNotesButton.addEventListener('click', handleSaveNotes);
@@ -905,4 +911,3 @@ const initializeApp = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
-
