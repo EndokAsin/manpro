@@ -3,178 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProyekManajer</title>
+    <title>Dashboard Manajemen Proyek Relawan</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Chart.js and adapter for time series for Gantt Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS (XLSX) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
-        .kpi-value {
-            word-break: break-word;
-            hyphens: auto;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; }
+        .modal-overlay.show { display: block; }
+        .modal-content { max-height: 90vh; overflow-y: auto; }
+        .kpi-value { font-size: 1.875rem; word-break: break-word; hyphens: auto; }
+        .modal { display: none; position: fixed; inset: 0; }
+        .modal.show { display: flex; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Halaman Login & Registrasi -->
-    <div id="auth-page" class="flex items-center justify-center min-h-screen bg-gray-200">
-        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-            <h2 id="auth-title" class="text-2xl font-bold text-center text-gray-900">Login</h2>
-            <form id="auth-form" class="space-y-6">
-                <div>
-                    <label for="email" class="text-sm font-medium text-gray-700">Email</label>
-                    <input id="email" name="email" type="email" required autocomplete="email" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="email@anda.com">
-                </div>
-                <div>
-                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required autocomplete="current-password" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="********">
-                </div>
-                <div>
-                    <button type="submit" id="auth-button" class="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Login
-                    </button>
-                </div>
-            </form>
-            <p id="auth-error" class="text-sm text-center text-red-600"></p>
-            <p class="text-sm text-center text-gray-600">
-                <span id="auth-prompt-text">Belum punya akun?</span>
-                <a href="#" id="switch-auth-mode" class="font-medium text-indigo-600 hover:text-indigo-500">Registrasi</a>
-            </p>
+<!-- Main App Container -->
+<div id="app-page" class="min-h-screen"> 
+    
+    <!-- Header/Navigation Bar -->
+    <header class="bg-indigo-600 shadow-md p-4 text-white sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">ProjectKu</h1>
+            <div class="flex items-center space-x-4">
+                <span id="user-email" class="text-sm font-medium">user@projectku.id</span>
+                <!-- Tombol Refresh/Reset menggantikan Logout -->
+                <button id="refresh-button" class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1 px-3 rounded-full transition duration-150 shadow-md">Refresh/Reset</button>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Halaman Utama Aplikasi -->
-    <div id="app-page" class="hidden">
-        <header class="bg-white shadow-md sticky top-0 z-20">
-            <nav class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                <h1 class="text-xl font-bold text-indigo-600">ProyekManajer</h1>
-                <div>
-                    <span id="user-email" class="hidden sm:inline text-gray-600 mr-4"></span>
-                    <button id="logout-button" class="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Logout</button>
-                </div>
-            </nav>
-        </header>
-
-        <main class="container mx-auto p-4 sm:p-6">
-            
-            <div id="projects-list-view" class="space-y-8">
-                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Dasbor Utama</h2>
-                    <button id="add-project-button" class="w-full sm:w-auto px-4 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Tambah Proyek Baru</button>
-                </div>
-                
-                <div id="dashboard-container" class="mb-8">
-                     <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
-                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                         <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-center mb-2">Ringkasan Budget Proyek</h4><div class="chart-container"><canvas id="dashboard-budget-chart"></canvas></div></div>
-                         <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-center mb-2">Status Proyek</h4><div class="chart-container"><canvas id="dashboard-status-chart"></canvas></div></div>
-                     </div>
-                </div>
-
-                <div id="gantt-chart-section" class="bg-white p-4 rounded-lg shadow mb-8">
-                    <h3 class="text-xl font-bold text-gray-900 mb-4">Timeline Proyek</h3>
-                    <div class="chart-container h-[400px]"><canvas id="gantt-chart"></canvas></div>
-                </div>
-
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek</h3>
-                <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Project List View (Dashboard) -->
+        <div id="projects-list-view" class="space-y-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900">Dashboard Proyek</h2>
+                <button id="add-project-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Tambah Proyek Baru
+                </button>
             </div>
 
-            <!-- Detail Proyek (awalnya tersembunyi) -->
-            <div id="project-detail-view" class="hidden">
-                <button id="back-to-projects" class="mb-4 px-4 py-2 font-semibold text-white bg-gray-500 rounded-md hover:bg-gray-600">&larr; Kembali ke Dasbor</button>
-                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
-                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div class="flex-1">
-                           <h3 id="detail-project-name" class="text-2xl sm:text-3xl font-bold text-gray-900"></h3>
-                           <p id="detail-project-description" class="text-gray-600 mt-1"></p>
-                        </div>
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <button id="export-excel-button" class="flex-1 sm:flex-none px-3 py-2 text-sm font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">Export Excel</button>
-                            <button id="delete-project-button" class="flex-1 sm:flex-none px-3 py-2 text-sm font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">Hapus</button>
-                        </div>
-                    </div>
+            <!-- Dashboard KPIs -->
+            <div id="dashboard-container" class="space-y-6">
+                <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- KPIs loaded by JS -->
+                </div>
 
-                    <hr class="my-6">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <h4 class="text-xl font-semibold mb-3">Informasi Proyek</h4>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between items-start"><span class="font-medium text-gray-500">Tipe Kegiatan</span><div id="detail-activity-type" class="flex flex-wrap justify-end gap-2 max-w-[70%]"></div></div>
-                                <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Kategori Tempat</span><span id="detail-venue-category" class="font-semibold text-gray-800 text-right"></span></div>
-                                <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Timeline</span><span id="detail-timeline" class="font-semibold text-gray-800 text-right"></span></div>
-                                <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Budget Awal</span><span id="detail-initial-budget" class="font-semibold text-gray-800"></span></div>
-                                <div class="flex justify-between items-center"><span class="font-medium text-gray-500">Budget Disesuaikan</span><span id="detail-adjusted-budget" class="font-semibold text-gray-800"></span></div>
-                                <div class="flex justify-between items-center"><span class="font-bold text-green-600">Sisa Budget Saat Ini</span><span id="detail-current-budget" class="font-bold text-xl text-green-600"></span></div>
-                                <button id="open-add-budget-button" class="mt-2 text-sm text-indigo-600 hover:underline font-semibold">Tambah/Kurangi Budget</button>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-xl font-semibold mb-3">Catatan Proyek</h4>
-                            <textarea id="project-notes" class="w-full p-2 border rounded" rows="4" placeholder="Tambahkan catatan penting..."></textarea>
-                            <button id="save-notes-button" class="mt-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-500 rounded-md hover:bg-indigo-600">Simpan Catatan</button>
-                        </div>
+                <!-- Dashboard Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribusi Budget Proyek</h3>
+                        <div class="h-64"><canvas id="dashboard-budget-chart"></canvas></div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-center mb-2">Penggunaan Budget</h4><div class="chart-container"><canvas id="budget-chart"></canvas></div></div>
-                        <div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-center mb-2">Progres Tugas</h4><div class="chart-container"><canvas id="progress-chart"></canvas></div></div>
+                    <div class="bg-white p-6 rounded-lg shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Status Proyek Aktif</h3>
+                        <div class="h-64"><canvas id="dashboard-status-chart"></canvas></div>
                     </div>
+                </div>
 
+                <!-- Gantt Chart -->
+                <div id="gantt-chart-section" class="bg-white p-6 rounded-lg shadow-xl" style="display: none;">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Timeline Proyek (Gantt Chart)</h3>
+                    <div class="h-96"><canvas id="gantt-chart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Projects List -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek Anda</h3>
+                <div id="projects-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Project Cards loaded by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Detail View -->
+        <div id="project-detail-view" class="hidden space-y-6">
+            <button id="back-to-projects" class="flex items-center text-indigo-600 hover:text-indigo-800 font-medium mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Kembali ke Dashboard
+            </button>
+
+            <div class="bg-white p-6 rounded-xl shadow-xl space-y-4">
+                <h2 id="detail-project-name" class="text-3xl font-extrabold text-gray-900">Nama Proyek</h2>
+                <p id="detail-project-description" class="text-gray-600"></p>
+                <div class="flex flex-wrap gap-2">
+                    <div id="detail-activity-type" class="flex flex-wrap gap-2 items-center"></div>
+                    <span id="detail-venue-category" class="text-sm font-semibold inline-block py-1 px-3 uppercase rounded-full text-purple-600 bg-purple-200"></span>
+                </div>
+            </div>
+
+            <!-- Details & Budget -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-xl space-y-4">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Informasi Keuangan & Waktu</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><p class="text-sm text-gray-500">Budget Awal</p><p id="detail-initial-budget" class="font-bold text-lg text-indigo-600"></p></div>
+                        <div><p class="text-sm text-gray-500">Budget Disesuaikan</p><p id="detail-adjusted-budget" class="font-bold text-lg text-indigo-600"></p></div>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-4">
+                        <div><p class="text-sm text-gray-500">Sisa Budget Saat Ini</p><p id="detail-current-budget" class="font-extrabold text-2xl text-green-600"></p></div>
+                        <button id="open-add-budget-button" class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150">Tambah Budget</button>
+                    </div>
+                    <div class="border-t pt-4">
+                        <p class="text-sm text-gray-500">Timeline Proyek</p>
+                        <p id="detail-timeline" class="font-semibold text-gray-700"></p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-xl space-y-3 flex flex-col justify-between">
+                    <button onclick="openProjectModal(currentProject)" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Edit Proyek</button>
+                    <button id="export-excel-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Export Laporan (Excel)</button>
+                    <button id="delete-project-button" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Hapus Proyek</button>
+                </div>
+            </div>
+
+            <!-- Tasks, Notes, and Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Task List -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-xl space-y-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Daftar Tugas & Anggaran</h3>
+                        <button id="add-task-button" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition shadow-md flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Tambah Tugas
+                        </button>
+                    </div>
+                    <div id="tasks-list" class="space-y-3">
+                        <!-- Tasks loaded by JS -->
+                    </div>
+                </div>
+
+                <!-- Notes & Charts -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Budget Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Alokasi Budget</h3>
+                        <div class="h-48"><canvas id="budget-chart"></canvas></div>
+                    </div>
+                    
+                    <!-- Progress Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Progress Tugas</h3>
+                        <div class="h-48"><canvas id="progress-chart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Project Notes (Full Width) -->
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-xl">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Catatan Proyek</h3>
+                    <textarea id="project-notes" rows="5" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tulis catatan penting, kontak, atau informasi venue di sini..."></textarea>
+                    <button id="save-notes-button" class="mt-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Simpan Catatan</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- MODAL: Tambah/Edit Proyek -->
+<div id="project-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 id="project-modal-title" class="text-2xl font-bold mb-4 text-gray-800">Tambah Proyek Baru</h3>
+                <form id="project-form" class="space-y-4">
+                    <input type="hidden" id="project-id">
                     <div>
-                        <div class="flex justify-between items-center mb-4"><h4 class="text-xl font-semibold">Daftar Tugas</h4><button id="add-task-button" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Tambah Tugas</button></div>
-                        <div id="tasks-list" class="space-y-3"></div>
+                        <label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label>
+                        <input type="text" id="project-name" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
                     </div>
-                </div>
+                    <div>
+                        <label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi Singkat</label>
+                        <textarea id="project-description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipe Aktivitas (Pilih Min. 1)</label>
+                        <div id="project-activity-type-checkboxes" class="flex flex-wrap gap-4 p-2 border border-gray-200 rounded-lg">
+                            <!-- Checkboxes loaded by JS -->
+                        </div>
+                    </div>
+                    <div>
+                        <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Venue</label>
+                        <select id="project-venue-category" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 bg-white">
+                            <!-- Options loaded by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label>
+                        <input type="number" id="project-budget" required min="0" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
+                            <input type="date" id="project-start-date" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="project-end-date" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label>
+                            <input type="date" id="project-end-date" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-project-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition">Simpan Proyek</button>
+                    </div>
+                </form>
             </div>
-        </main>
-    </div>
-
-    <!-- Modal Tambah/Edit Proyek -->
-    <div id="project-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h3 id="project-modal-title" class="text-2xl font-bold mb-6">Tambah Proyek Baru</h3>
-            <form id="project-form" class="space-y-4">
-                <input type="hidden" id="project-id">
-                <div><label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label><input type="text" id="project-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
-                <div><label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi</label><textarea id="project-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea></div>
-                <div>
-                    <span class="block text-sm font-medium text-gray-700">Tipe Kegiatan</span>
-                    <div id="project-activity-type-checkboxes" class="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-                </div>
-                <div>
-                    <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Tempat</label>
-                    <select id="project-venue-category" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        <!-- Opsi akan ditambahkan oleh JS -->
-                    </select>
-                </div>
-                <div><label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label><input type="number" id="project-budget" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label><input type="date" id="project-start-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
-                    <div><label for="project-end-date" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label><input type="date" id="project-end-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div>
-                </div>
-                <div class="flex justify-end gap-4 pt-4">
-                    <button type="button" id="cancel-project-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Simpan</button>
-                </div>
-            </form>
         </div>
     </div>
-    
-    <!-- Modal lainnya tetap sama... -->
-    <div id="task-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg"><h3 id="task-modal-title" class="text-2xl font-bold mb-6">Tambah Tugas Baru</h3><form id="task-form" class="space-y-4"><input type="hidden" id="task-id"><div><label for="task-name" class="block text-sm font-medium text-gray-700">Nama Tugas</label><input type="text" id="task-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div><div><label for="task-cost" class="block text-sm font-medium text-gray-700">Biaya (Rp)</label><input type="number" id="task-cost" required value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></div><div><label for="task-status" class="block text-sm font-medium text-gray-700">Status</label><select id="task-status" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="Belum Dikerjakan">Belum Dikerjakan</option><option value="Sedang Dikerjakan">Sedang Dikerjakan</option><option value="Selesai">Selesai</option></select></div><div class="flex justify-end gap-4 pt-4"><button type="button" id="cancel-task-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Simpan</button></div></form></div>
+</div>
+
+<!-- MODAL: Tambah/Edit Tugas -->
+<div id="task-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 id="task-modal-title" class="text-2xl font-bold mb-4 text-gray-800">Tambah Tugas Baru</h3>
+                <form id="task-form" class="space-y-4">
+                    <input type="hidden" id="task-id">
+                    <div>
+                        <label for="task-name" class="block text-sm font-medium text-gray-700">Nama Tugas</label>
+                        <input type="text" id="task-name" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="task-cost" class="block text-sm font-medium text-gray-700">Biaya (Rp)</label>
+                        <input type="number" id="task-cost" required min="0" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="task-status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="task-status" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 bg-white">
+                            <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                            <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-task-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition">Simpan Tugas</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div id="add-budget-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Ubah Budget</h3><form id="add-budget-form" class="space-y-4"><p class="text-sm text-gray-600">Masukkan jumlah positif untuk menambah, atau jumlah negatif (misal: -50000) untuk mengurangi.</p><div><label for="add-budget-amount" class="block text-sm font-medium text-gray-700">Jumlah (Rp)</label><input type="number" id="add-budget-amount" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: -50000"></div><div class="flex justify-end gap-4 pt-4"><button type="button" id="cancel-add-budget-modal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Batal</button><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Simpan</button></div></form></div>
+</div>
+
+<!-- MODAL: Tambah Budget -->
+<div id="add-budget-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Tambah Budget Proyek</h3>
+                <form id="add-budget-form" class="space-y-4">
+                    <div>
+                        <label for="add-budget-amount" class="block text-sm font-medium text-gray-700">Jumlah Penambahan (Rp)</label>
+                        <input type="number" id="add-budget-amount" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2" placeholder="Contoh: 100000 atau -50000">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-add-budget-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition">Tambahkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    
-    <script src="app.js"></script>
+</div>
+
+<!-- Pemanggilan script eksternal -->
+<script src="app.js"></script>
+
 </body>
 </html>
-
