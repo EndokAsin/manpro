@@ -1,12 +1,290 @@
-// --- KONFIGURASI & INISIALISASI ---
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Manajemen Proyek Relawan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Chart.js and adapter for time series for Gantt Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; }
+        .modal-overlay.show { display: block; }
+        .modal-content { max-height: 90vh; overflow-y: auto; }
+        .kpi-value { font-size: 1.875rem; }
+    </style>
+</head>
+<body>
+
+<!-- Main App Container -->
+<div id="app-page" class="min-h-screen">
+    
+    <!-- Header/Navigation Bar -->
+    <header class="bg-indigo-600 shadow-md p-4 text-white">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">ProjectKu</h1>
+            <div class="flex items-center space-x-4">
+                <span id="user-email" class="text-sm font-medium">user@projectku.id</span>
+                <button id="logout-button" class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1 px-3 rounded-full transition duration-150 shadow-md">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Project List View (Dashboard) -->
+        <div id="projects-list-view" class="space-y-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900">Dashboard Proyek</h2>
+                <button id="add-project-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Tambah Proyek Baru
+                </button>
+            </div>
+
+            <!-- Dashboard KPIs -->
+            <div id="dashboard-container" class="space-y-6">
+                <div id="dashboard-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- KPIs loaded by JS -->
+                </div>
+
+                <!-- Dashboard Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Distribusi Budget Proyek</h3>
+                        <div class="h-64"><canvas id="dashboard-budget-chart"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Status Proyek Aktif</h3>
+                        <div class="h-64"><canvas id="dashboard-status-chart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Gantt Chart -->
+                <div id="gantt-chart-section" class="bg-white p-6 rounded-lg shadow-xl" style="display: none;">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Timeline Proyek (Gantt Chart)</h3>
+                    <div class="h-96"><canvas id="gantt-chart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Projects List -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Daftar Proyek Anda</h3>
+                <div id="projects-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Project Cards loaded by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Detail View -->
+        <div id="project-detail-view" class="hidden space-y-6">
+            <button id="back-to-projects" class="flex items-center text-indigo-600 hover:text-indigo-800 font-medium mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Kembali ke Dashboard
+            </button>
+
+            <div class="bg-white p-6 rounded-xl shadow-xl space-y-4">
+                <h2 id="detail-project-name" class="text-3xl font-extrabold text-gray-900">Nama Proyek</h2>
+                <p id="detail-project-description" class="text-gray-600"></p>
+                <div class="flex flex-wrap gap-2">
+                    <div id="detail-activity-type" class="flex flex-wrap gap-2 items-center"></div>
+                    <span id="detail-venue-category" class="text-sm font-semibold inline-block py-1 px-3 uppercase rounded-full text-purple-600 bg-purple-200"></span>
+                </div>
+            </div>
+
+            <!-- Details & Budget -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-xl space-y-4">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Informasi Keuangan & Waktu</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><p class="text-sm text-gray-500">Budget Awal</p><p id="detail-initial-budget" class="font-bold text-lg text-indigo-600"></p></div>
+                        <div><p class="text-sm text-gray-500">Budget Disesuaikan</p><p id="detail-adjusted-budget" class="font-bold text-lg text-indigo-600"></p></div>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-4">
+                        <div><p class="text-sm text-gray-500">Sisa Budget Saat Ini</p><p id="detail-current-budget" class="font-extrabold text-2xl text-green-600"></p></div>
+                        <button id="open-add-budget-button" class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150">Tambah Budget</button>
+                    </div>
+                    <div class="border-t pt-4">
+                        <p class="text-sm text-gray-500">Timeline Proyek</p>
+                        <p id="detail-timeline" class="font-semibold text-gray-700"></p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-xl space-y-3 flex flex-col justify-between">
+                    <button onclick="openProjectModal(currentProject)" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Edit Proyek</button>
+                    <button id="export-excel-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Export Laporan (Excel)</button>
+                    <button id="delete-project-button" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Hapus Proyek</button>
+                </div>
+            </div>
+
+            <!-- Tasks, Notes, and Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Task List -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-xl space-y-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Daftar Tugas & Anggaran</h3>
+                        <button id="add-task-button" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition shadow-md flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Tambah Tugas
+                        </button>
+                    </div>
+                    <div id="tasks-list" class="space-y-3">
+                        <!-- Tasks loaded by JS -->
+                    </div>
+                </div>
+
+                <!-- Notes & Charts -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Budget Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Alokasi Budget</h3>
+                        <div class="h-48"><canvas id="budget-chart"></canvas></div>
+                    </div>
+                    
+                    <!-- Progress Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Progress Tugas</h3>
+                        <div class="h-48"><canvas id="progress-chart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Project Notes (Full Width) -->
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-xl">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Catatan Proyek</h3>
+                    <textarea id="project-notes" rows="5" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tulis catatan penting, kontak, atau informasi venue di sini..."></textarea>
+                    <button id="save-notes-button" class="mt-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">Simpan Catatan</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- MODAL: Tambah/Edit Proyek -->
+<div id="project-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 id="project-modal-title" class="text-2xl font-bold mb-4 text-gray-800">Tambah Proyek Baru</h3>
+                <form id="project-form" class="space-y-4">
+                    <input type="hidden" id="project-id">
+                    <div>
+                        <label for="project-name" class="block text-sm font-medium text-gray-700">Nama Proyek</label>
+                        <input type="text" id="project-name" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="project-description" class="block text-sm font-medium text-gray-700">Deskripsi Singkat</label>
+                        <textarea id="project-description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipe Aktivitas (Pilih Min. 1)</label>
+                        <div id="project-activity-type-checkboxes" class="flex flex-wrap gap-4 p-2 border border-gray-200 rounded-lg">
+                            <!-- Checkboxes loaded by JS -->
+                        </div>
+                    </div>
+                    <div>
+                        <label for="project-venue-category" class="block text-sm font-medium text-gray-700">Kategori Venue</label>
+                        <select id="project-venue-category" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 bg-white">
+                            <!-- Options loaded by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="project-budget" class="block text-sm font-medium text-gray-700">Budget Awal (Rp)</label>
+                        <input type="number" id="project-budget" required min="0" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="project-start-date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
+                            <input type="date" id="project-start-date" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="project-end-date" class="block text-sm font-medium text-gray-700">Tanggal Selesai</label>
+                            <input type="date" id="project-end-date" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-project-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition">Simpan Proyek</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Tambah/Edit Tugas -->
+<div id="task-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 id="task-modal-title" class="text-2xl font-bold mb-4 text-gray-800">Tambah Tugas Baru</h3>
+                <form id="task-form" class="space-y-4">
+                    <input type="hidden" id="task-id">
+                    <div>
+                        <label for="task-name" class="block text-sm font-medium text-gray-700">Nama Tugas</label>
+                        <input type="text" id="task-name" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="task-cost" class="block text-sm font-medium text-gray-700">Biaya (Rp)</label>
+                        <input type="number" id="task-cost" required min="0" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div>
+                        <label for="task-status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="task-status" required class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 bg-white">
+                            <option value="Belum Dikerjakan">Belum Dikerjakan</option>
+                            <option value="Sedang Dikerjakan">Sedang Dikerjakan</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-task-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition">Simpan Tugas</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Tambah Budget -->
+<div id="add-budget-modal" class="modal-overlay">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Tambah Budget Proyek</h3>
+                <form id="add-budget-form" class="space-y-4">
+                    <div>
+                        <label for="add-budget-amount" class="block text-sm font-medium text-gray-700">Jumlah Penambahan (Rp)</label>
+                        <input type="number" id="add-budget-amount" required min="1" class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-add-budget-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Batal</button>
+                        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition">Tambahkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Supabase Configuration is kept for data operations
 const SUPABASE_URL = 'https://rbmtvddmrwfxndalaecr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJibXR2ZGRtcndmeG5kYWxhZWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4ODA1MzYsImV4cCI6MjA3MDQ1NjUzNn0.1vpTH7F514LyyeOJL1fa-SViz-q-bCXryV0hFgeI4a8';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- STATE APLIKASI ---
-let currentUser = null;
+let currentUser = null; // Disediakan saat inisialisasi untuk bypass login
 let currentProject = null;
-let isRegisterMode = false;
 const defaultVenueCategories = ["Panti Jompo", "Yayasan Disabilitas", "Yayasan Kanker", "Umum"];
 const activityTypes = ["Edukasi", "Eksperimen", "Kreasi", "Games", "Ice Breaking"];
 let budgetChartInstance = null;
@@ -16,9 +294,8 @@ let dashboardStatusChartInstance = null;
 let ganttChartInstance = null; 
 
 // --- ELEMEN DOM (Deklarasi Variabel) ---
-let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
-    dashboardKPIs, authForm, authTitle, authButton,
-    switchAuthModeLink, authPromptText, authError, emailInput, passwordInput,
+let appPage, projectsListView, projectDetailView, dashboardContainer,
+    dashboardKPIs,
     userEmailEl, logoutButton, projectsContainer, addProjectButton,
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
@@ -32,63 +309,10 @@ let authPage, appPage, projectsListView, projectDetailView, dashboardContainer,
     taskIdInput, taskNameInput, taskCostInput, taskStatusInput, addBudgetModal, addBudgetForm,
     cancelAddBudgetModal, addBudgetAmountInput, openAddBudgetButton, ganttChartSection;
 
-// --- FUNGSI UTILITAS & AUTENTIKASI ---
+// --- FUNGSI UTILITAS ---
 const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A';
-
-const toggleAuthMode = () => {
-    isRegisterMode = !isRegisterMode;
-    authForm.reset();
-    authError.textContent = '';
-    if (isRegisterMode) {
-        authTitle.textContent = 'Registrasi';
-        authButton.textContent = 'Registrasi';
-        authPromptText.textContent = 'Sudah punya akun?';
-        switchAuthModeLink.textContent = 'Login';
-    } else {
-        authTitle.textContent = 'Login';
-        authButton.textContent = 'Login';
-        authPromptText.textContent = 'Belum punya akun?';
-        switchAuthModeLink.textContent = 'Registrasi';
-    }
-};
-
-const handleAuthSubmit = async (event) => {
-    event.preventDefault();
-    const email = emailInput.value;
-    const password = passwordInput.value;
-    authError.textContent = '';
-    
-    try {
-        let response;
-        if (isRegisterMode) {
-            response = await supabaseClient.auth.signUp({ email, password });
-            if (!response.error && response.data.user) {
-                alert('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
-                toggleAuthMode();
-            }
-        } else {
-            response = await supabaseClient.auth.signInWithPassword({ email, password });
-        }
-        if (response.error) throw response.error;
-    } catch (error) {
-        console.error('Error:', error.message);
-        authError.textContent = error.message;
-    }
-};
-
-const handleLogout = async () => {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) console.error('Error logging out:', error.message);
-};
-
-const showAuthPage = () => {
-    authPage.classList.remove('hidden');
-    appPage.classList.add('hidden');
-};
-
 const showAppPage = () => {
-    authPage.classList.add('hidden');
     appPage.classList.remove('hidden');
     showProjectsListView();
 };
@@ -190,7 +414,7 @@ const renderTasks = (tasks) => {
             taskEl.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-md';
             taskEl.innerHTML = `
                 <div><p class="font-medium">${task.name}</p><p class="text-sm text-gray-500">${formatCurrency(task.cost)}</p></div>
-                <div class="flex items-center gap-2"><span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200">${task.status}</span><button data-task-id="${task.id}" class="edit-task-btn text-blue-600">Edit</button><button data-task-id="${task.id}" class="delete-task-btn text-red-600">Hapus</button></div>
+                <div class="flex items-center gap-2"><span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200">${task.status}</span><button data-task-id="${task.id}" class="edit-task-btn text-blue-600 hover:text-blue-800">Edit</button><button data-task-id="${task.id}" class="delete-task-btn text-red-600 hover:text-red-800">Hapus</button></div>
             `;
             tasksList.appendChild(taskEl);
         });
@@ -228,7 +452,18 @@ const renderGanttChart = (projects) => {
                 backgroundColor: 'rgba(79, 70, 229, 0.6)',
             }]
         },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' } } } }
+        options: { 
+            indexAxis: 'y', 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                x: { 
+                    type: 'time', 
+                    time: { unit: 'day', tooltipFormat: 'dd MMM yyyy' },
+                    min: new Date(Math.min(...validProjects.map(p => new Date(p.start_date)))),
+                } 
+            } 
+        }
     });
 };
 
@@ -239,9 +474,14 @@ const renderDashboardCharts = (projects) => {
         type: 'bar',
         data: {
             labels: projects.map(p => p.name),
-            datasets: [{ label: 'Budget', data: projects.map(p => p.current_budget || p.initial_budget), backgroundColor: 'rgba(79, 70, 229, 0.8)' }]
+            datasets: [{ label: 'Budget (IDR)', data: projects.map(p => p.current_budget || p.initial_budget), backgroundColor: 'rgba(79, 70, 229, 0.8)' }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } },
+            scales: { y: { ticks: { callback: function(value, index, values) { return formatCurrency(value); } } } }
+        }
     });
 
     const statusCtx = document.getElementById('dashboard-status-chart').getContext('2d');
@@ -270,7 +510,10 @@ const updateDetailCharts = (tasks) => {
         type: 'doughnut',
         data: {
             labels: ['Sisa Budget', 'Biaya Terpakai'],
-            datasets: [{ data: [remainingBudget, totalCost], backgroundColor: ['#4ade80', '#f87171'] }]
+            datasets: [{ 
+                data: [Math.max(0, remainingBudget), totalCost], // Ensure remaining budget is not negative in chart data
+                backgroundColor: ['#4ade80', '#f87171'] 
+            }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
@@ -285,7 +528,10 @@ const updateDetailCharts = (tasks) => {
         type: 'pie',
         data: {
             labels: ['Belum Dikerjakan', 'Sedang Dikerjakan', 'Selesai'],
-            datasets: [{ data: [statusCounts['Belum Dikerjakan'] || 0, statusCounts['Sedang Dikerjakan'] || 0, statusCounts['Selesai'] || 0], backgroundColor: ['#9ca3af', '#facc15', '#4ade80'] }]
+            datasets: [{ 
+                data: [statusCounts['Belum Dikerjakan'] || 0, statusCounts['Sedang Dikerjakan'] || 0, statusCounts['Selesai'] || 0], 
+                backgroundColor: ['#9ca3af', '#facc15', '#4ade80'] 
+            }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
@@ -300,7 +546,12 @@ const fetchProjects = async () => {
         renderProjects(data);
     } catch (error) {
         console.error('Error fetching projects:', error.message);
-        alert('Gagal memuat proyek.');
+        // Show error message instead of alert
+        const errorMessage = document.createElement('p');
+        errorMessage.className = 'text-red-500 text-center py-4';
+        errorMessage.textContent = 'Gagal memuat proyek. Pastikan Anda memiliki koneksi internet.';
+        projectsContainer.innerHTML = '';
+        projectsContainer.appendChild(errorMessage);
         renderProjects([]);
     }
 };
@@ -319,6 +570,11 @@ const handleProjectFormSubmit = async (event) => {
     const isUpdate = !!projectIdInput.value;
     const selectedActivities = Array.from(document.querySelectorAll('input[name="project-activity-type"]:checked')).map(cb => cb.value);
     
+    if (selectedActivities.length === 0) {
+        alert('Mohon pilih minimal satu Tipe Aktivitas.');
+        return;
+    }
+
     const projectData = {
         name: projectNameInput.value,
         description: projectDescriptionInput.value,
@@ -334,13 +590,16 @@ const handleProjectFormSubmit = async (event) => {
         projectData.current_budget = projectData.initial_budget;
     }
 
-    const { error } = isUpdate
-        ? await supabaseClient.from('projects').update(projectData).eq('id', projectIdInput.value)
-        : await supabaseClient.from('projects').insert([projectData]);
+    let error;
+    if (isUpdate) {
+        ({ error } = await supabaseClient.from('projects').update(projectData).eq('id', projectIdInput.value));
+    } else {
+        ({ error } = await supabaseClient.from('projects').insert([projectData]));
+    }
     
     if (error) {
         console.error('Error saving project:', error.message);
-        alert('Gagal menyimpan proyek.');
+        alert('Gagal menyimpan proyek: ' + error.message);
     } else {
         closeProjectModal();
         fetchProjects();
@@ -358,12 +617,16 @@ const handleTaskFormSubmit = async (event) => {
         user_id: currentUser.id
     };
     
-    const { error } = isUpdate
-        ? await supabaseClient.from('tasks').update(taskData).eq('id', taskIdInput.value)
-        : await supabaseClient.from('tasks').insert([taskData]);
+    let error;
+    if (isUpdate) {
+        ({ error } = await supabaseClient.from('tasks').update(taskData).eq('id', taskIdInput.value));
+    } else {
+        ({ error } = await supabaseClient.from('tasks').insert([taskData]));
+    }
 
     if (error) {
         console.error('Error saving task:', error.message);
+        alert('Gagal menyimpan tugas: ' + error.message);
     } else {
         closeTaskModal();
         renderProjectDetails();
@@ -373,11 +636,17 @@ const handleTaskFormSubmit = async (event) => {
 const handleAddBudgetFormSubmit = async (event) => {
     event.preventDefault();
     const amount = parseFloat(addBudgetAmountInput.value);
-    if (isNaN(amount)) return;
+    if (isNaN(amount) || amount <= 0) {
+        alert("Jumlah harus lebih dari 0.");
+        return;
+    }
+    
     const newBudget = (currentProject.current_budget || currentProject.initial_budget) + amount;
     const { data, error } = await supabaseClient.from('projects').update({ current_budget: newBudget }).eq('id', currentProject.id).select().single();
+    
     if (error) {
         console.error('Error updating budget:', error.message);
+        alert('Gagal memperbarui budget: ' + error.message);
     } else {
         currentProject = data;
         renderProjectDetails();
@@ -387,14 +656,25 @@ const handleAddBudgetFormSubmit = async (event) => {
 
 const handleSaveNotes = async () => {
     const { error } = await supabaseClient.from('projects').update({ notes: projectNotes.value }).eq('id', currentProject.id);
-    if (error) alert('Gagal menyimpan catatan.');
-    else alert('Catatan disimpan!');
+    if (error) alert('Gagal menyimpan catatan: ' + error.message);
+    else alert('Catatan berhasil disimpan!');
 };
 
 const handleDeleteProject = async () => {
-    if (!confirm(`Hapus proyek "${currentProject.name}"?`)) return;
-    const { error } = await supabaseClient.from('projects').delete().eq('id', currentProject.id);
-    if (error) alert('Gagal menghapus proyek.');
+    const confirmDelete = confirm(`Apakah Anda yakin ingin menghapus proyek "${currentProject.name}"? Semua tugas terkait akan ikut terhapus.`);
+    if (!confirmDelete) return;
+    
+    // Hapus tugas terkait
+    const { error: taskError } = await supabaseClient.from('tasks').delete().eq('project_id', currentProject.id);
+    if (taskError) {
+        alert('Gagal menghapus tugas terkait: ' + taskError.message);
+        return;
+    }
+    
+    // Hapus proyek
+    const { error: projectError } = await supabaseClient.from('projects').delete().eq('id', currentProject.id);
+    
+    if (projectError) alert('Gagal menghapus proyek: ' + projectError.message);
     else showProjectsListView();
 };
 
@@ -407,7 +687,9 @@ const handleEditTaskClick = async (event) => {
 
 const handleDeleteTaskClick = async (event) => {
     const taskId = event.target.dataset.taskId;
-    if (!confirm('Hapus tugas ini?')) return;
+    const confirmDelete = confirm('Apakah Anda yakin ingin menghapus tugas ini?');
+    if (!confirmDelete) return;
+    
     const { error } = await supabaseClient.from('tasks').delete().eq('id', taskId);
     if (error) console.error('Error deleting task:', error);
     else renderProjectDetails();
@@ -416,44 +698,50 @@ const handleDeleteTaskClick = async (event) => {
 const openProjectModal = (project = null) => {
     projectForm.reset();
 
-    if (projectActivityTypeCheckboxes) {
-        projectActivityTypeCheckboxes.innerHTML = '';
-        activityTypes.forEach(type => {
-            projectActivityTypeCheckboxes.innerHTML += `<div><input type="checkbox" id="type-${type}" value="${type}" name="project-activity-type"><label for="type-${type}" class="ml-2">${type}</label></div>`;
-        });
-    } else {
-        console.error("Element with ID 'project-activity-type-checkboxes' not found.");
-    }
+    // Setup Activity Checkboxes
+    projectActivityTypeCheckboxes.innerHTML = '';
+    activityTypes.forEach(type => {
+        projectActivityTypeCheckboxes.innerHTML += `
+            <div class="flex items-center">
+                <input type="checkbox" id="type-${type.replace(/\s/g, '-')}" value="${type}" name="project-activity-type" class="rounded text-teal-600 focus:ring-teal-500">
+                <label for="type-${type.replace(/\s/g, '-')}" class="ml-2 text-sm text-gray-700">${type}</label>
+            </div>
+        `;
+    });
     
-    if (projectVenueCategorySelect) {
-        projectVenueCategorySelect.innerHTML = '';
-        defaultVenueCategories.forEach(cat => {
-            projectVenueCategorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        });
-    } else {
-        console.error("Element with ID 'project-venue-category' not found.");
-    }
-
+    // Setup Venue Select
+    projectVenueCategorySelect.innerHTML = '';
+    defaultVenueCategories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        projectVenueCategorySelect.appendChild(option);
+    });
 
     if (project) {
         projectModalTitle.textContent = 'Edit Proyek';
         projectIdInput.value = project.id;
         projectNameInput.value = project.name;
         projectDescriptionInput.value = project.description;
+        
         (project.activity_type || []).forEach(type => {
-            const cb = document.querySelector(`#type-${type}`);
+            const cb = document.querySelector(`#type-${type.replace(/\s/g, '-')}`);
             if (cb) cb.checked = true;
         });
+
         if (projectVenueCategorySelect) {
             projectVenueCategorySelect.value = project.venue_category;
         }
-        projectBudgetInput.parentElement.style.display = 'none';
+        
+        projectBudgetInput.required = false;
+        projectBudgetInput.parentElement.classList.add('hidden');
         projectStartDateInput.value = project.start_date;
         projectEndDateInput.value = project.end_date;
     } else {
         projectModalTitle.textContent = 'Tambah Proyek Baru';
         projectIdInput.value = '';
-        projectBudgetInput.parentElement.style.display = 'block';
+        projectBudgetInput.required = true;
+        projectBudgetInput.parentElement.classList.remove('hidden');
     }
     projectModal.classList.add('show');
 };
@@ -469,6 +757,8 @@ const openTaskModal = (task = null) => {
         taskStatusInput.value = task.status;
     } else {
         taskModalTitle.textContent = 'Tambah Tugas Baru';
+        taskIdInput.value = '';
+        taskStatusInput.value = 'Belum Dikerjakan';
     }
     taskModal.classList.add('show');
 };
@@ -479,38 +769,52 @@ const closeAddBudgetModal = () => addBudgetModal.classList.remove('show');
 
 const handleExportToExcel = async () => {
     const tasks = await fetchTasks(currentProject.id);
+    const totalCost = tasks.reduce((sum, task) => sum + task.cost, 0);
+    const remainingBudget = (currentProject.current_budget || currentProject.initial_budget) - totalCost;
+
     const summaryData = [
+        ["LAPORAN RINGKASAN PROYEK", ""],
         ["Nama Proyek", currentProject.name],
         ["Deskripsi", currentProject.description],
         ["Timeline", `${formatDate(currentProject.start_date)} - ${formatDate(currentProject.end_date)}`],
+        ["Kategori Venue", currentProject.venue_category],
+        ["Tipe Aktivitas", (currentProject.activity_type || []).join(', ')],
+        ["", ""],
+        ["ANGGARAN", ""],
         ["Budget Awal", currentProject.initial_budget],
         ["Budget Disesuaikan", currentProject.current_budget],
+        ["Total Biaya Tugas", totalCost],
+        ["Sisa Budget", remainingBudget],
     ];
-    const taskData = tasks.map(t => ({ "Nama": t.name, "Biaya": t.cost, "Status": t.status }));
+    
+    const taskData = tasks.map(t => ({ 
+        "Nama Tugas": t.name, 
+        "Biaya (IDR)": t.cost, 
+        "Status": t.status 
+    }));
+    
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     const ws2 = XLSX.utils.json_to_sheet(taskData);
+    
+    // Styling attempt (basic width)
+    const wscols = [ {wch: 25}, {wch: 40} ];
+    ws1['!cols'] = wscols;
+    
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan");
-    XLSX.utils.book_append_sheet(wb, ws2, "Tugas");
-    XLSX.writeFile(wb, `Laporan_${currentProject.name}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan Proyek");
+    XLSX.utils.book_append_sheet(wb, ws2, "Daftar Tugas");
+    
+    XLSX.writeFile(wb, `Laporan_${currentProject.name.replace(/\s/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    alert("Laporan berhasil diexport!");
 };
 
 const initializeApp = () => {
     // Inisialisasi Elemen DOM
-    authPage.classList.add('hidden');
-    appPage.classList.remove('hidden');
+    appPage = document.getElementById('app-page');
     projectsListView = document.getElementById('projects-list-view');
     projectDetailView = document.getElementById('project-detail-view');
     dashboardContainer = document.getElementById('dashboard-container');
     dashboardKPIs = document.getElementById('dashboard-kpis');
-    authForm = document.getElementById('auth-form');
-    authTitle = document.getElementById('auth-title');
-    authButton = document.getElementById('auth-button');
-    switchAuthModeLink = document.getElementById('switch-auth-mode');
-    authPromptText = document.getElementById('auth-prompt-text');
-    authError = document.getElementById('auth-error');
-    emailInput = document.getElementById('email');
-    passwordInput = document.getElementById('password');
     userEmailEl = document.getElementById('user-email');
     logoutButton = document.getElementById('logout-button');
     projectsContainer = document.getElementById('projects-container');
@@ -557,28 +861,45 @@ const initializeApp = () => {
     openAddBudgetButton = document.getElementById('open-add-budget-button');
     ganttChartSection = document.getElementById('gantt-chart-section');
 
+    // --- SETUP BYPASS LOGIN ---
+    // Mengatur user secara manual untuk langsung masuk ke dashboard
+    currentUser = { id: 'guest-user-123', email: 'user@projectku.id' };
+    userEmailEl.textContent = currentUser.email;
+    // --- END BYPASS ---
+
     // Event Listeners
-    logoutButton.addEventListener('click', () => location.reload());
+    // Logout hanya me-reload halaman karena tidak ada sesi Supabase yang dikelola di sini
+    logoutButton.addEventListener('click', () => location.reload()); 
     addProjectButton.addEventListener('click', () => openProjectModal());
-    projectForm.addEventListener('submit', handleProjectFormSubmit);
+    projectModal.addEventListener('click', closeProjectModal);
     cancelProjectModal.addEventListener('click', closeProjectModal);
+    projectForm.addEventListener('submit', handleProjectFormSubmit);
+    
     backToProjectsButton.addEventListener('click', showProjectsListView);
     deleteProjectButton.addEventListener('click', handleDeleteProject);
     saveNotesButton.addEventListener('click', handleSaveNotes);
-    addTaskButton.addEventListener('click', () => openTaskModal());
-    taskForm.addEventListener('submit', handleTaskFormSubmit);
-    cancelTaskModal.addEventListener('click', closeTaskModal);
-    openAddBudgetButton.addEventListener('click', openAddBudgetModal);
-    addBudgetForm.addEventListener('submit', handleAddBudgetFormSubmit);
-    cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
     exportExcelButton.addEventListener('click', handleExportToExcel);
+    
+    addTaskButton.addEventListener('click', () => openTaskModal());
+    taskModal.addEventListener('click', closeTaskModal);
+    cancelTaskModal.addEventListener('click', closeTaskModal);
+    taskForm.addEventListener('submit', handleTaskFormSubmit);
+    
+    openAddBudgetButton.addEventListener('click', openAddBudgetModal);
+    addBudgetModal.addEventListener('click', closeAddBudgetModal);
+    cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
+    addBudgetForm.addEventListener('submit', handleAddBudgetFormSubmit);
+    
+    // Cegah penutupan modal saat mengklik di dalam konten modal
+    document.querySelector('#project-modal .modal-content').addEventListener('click', e => e.stopPropagation());
+    document.querySelector('#task-modal .modal-content').addEventListener('click', e => e.stopPropagation());
+    document.querySelector('#add-budget-modal .modal-content').addEventListener('click', e => e.stopPropagation());
 
-    // Lewati login, langsung ke dashboard
-currentUser = { id: 'guest-user', email: 'guest@demo.local' };
-showAppPage();
-
+    showAppPage();
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+</script>
 
-
+</body>
+</html>
