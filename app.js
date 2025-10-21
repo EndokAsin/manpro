@@ -33,7 +33,8 @@
             <h1 class="text-2xl font-bold">ProjectKu</h1>
             <div class="flex items-center space-x-4">
                 <span id="user-email" class="text-sm font-medium">user@projectku.id</span>
-                <button id="logout-button" class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1 px-3 rounded-full transition duration-150 shadow-md">Logout</button>
+                <!-- Tombol diubah dari Logout menjadi Refresh/Reset -->
+                <button id="refresh-button" class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1 px-3 rounded-full transition duration-150 shadow-md">Refresh/Reset</button>
             </div>
         </div>
     </header>
@@ -296,7 +297,7 @@ let ganttChartInstance = null;
 // --- ELEMEN DOM (Deklarasi Variabel) ---
 let appPage, projectsListView, projectDetailView, dashboardContainer,
     dashboardKPIs,
-    userEmailEl, logoutButton, projectsContainer, addProjectButton,
+    userEmailEl, refreshButton, projectsContainer, addProjectButton, // Diubah: logoutButton -> refreshButton
     backToProjectsButton, detailProjectName, detailProjectDescription,
     detailInitialBudget, detailAdjustedBudget, detailCurrentBudget, detailTimeline,
     detailActivityType, detailVenueCategory,
@@ -816,7 +817,7 @@ const initializeApp = () => {
     dashboardContainer = document.getElementById('dashboard-container');
     dashboardKPIs = document.getElementById('dashboard-kpis');
     userEmailEl = document.getElementById('user-email');
-    logoutButton = document.getElementById('logout-button');
+    refreshButton = document.getElementById('refresh-button'); // Diubah: logoutButton -> refreshButton
     projectsContainer = document.getElementById('projects-container');
     addProjectButton = document.getElementById('add-project-button');
     backToProjectsButton = document.getElementById('back-to-projects');
@@ -868,8 +869,8 @@ const initializeApp = () => {
     // --- END BYPASS ---
 
     // Event Listeners
-    // Logout hanya me-reload halaman karena tidak ada sesi Supabase yang dikelola di sini
-    logoutButton.addEventListener('click', () => location.reload()); 
+    // Diubah: logoutButton -> refreshButton
+    refreshButton.addEventListener('click', () => location.reload()); 
     addProjectButton.addEventListener('click', () => openProjectModal());
     projectModal.addEventListener('click', closeProjectModal);
     cancelProjectModal.addEventListener('click', closeProjectModal);
