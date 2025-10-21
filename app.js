@@ -497,8 +497,8 @@ const handleExportToExcel = async () => {
 
 const initializeApp = () => {
     // Inisialisasi Elemen DOM
-    authPage = document.getElementById('auth-page');
-    appPage = document.getElementById('app-page');
+    authPage.classList.add('hidden');
+    appPage.classList.remove('hidden');
     projectsListView = document.getElementById('projects-list-view');
     projectDetailView = document.getElementById('project-detail-view');
     dashboardContainer = document.getElementById('dashboard-container');
@@ -558,9 +558,7 @@ const initializeApp = () => {
     ganttChartSection = document.getElementById('gantt-chart-section');
 
     // Event Listeners
-    authForm.addEventListener('submit', handleAuthSubmit);
-    switchAuthModeLink.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
-    logoutButton.addEventListener('click', handleLogout);
+    logoutButton.addEventListener('click', () => location.reload());
     addProjectButton.addEventListener('click', () => openProjectModal());
     projectForm.addEventListener('submit', handleProjectFormSubmit);
     cancelProjectModal.addEventListener('click', closeProjectModal);
@@ -575,17 +573,12 @@ const initializeApp = () => {
     cancelAddBudgetModal.addEventListener('click', closeAddBudgetModal);
     exportExcelButton.addEventListener('click', handleExportToExcel);
 
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-            currentUser = session.user;
-            userEmailEl.textContent = currentUser.email;
-            showAppPage();
-        } else {
-            currentUser = null;
-            showAuthPage();
-        }
-    });
+    // Lewati login, langsung ke dashboard
+currentUser = { id: 'guest-user', email: 'guest@demo.local' };
+showAppPage();
+
 };
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
 
