@@ -36,7 +36,7 @@
     <aside class="w-full md:w-64 bg-secondary text-white flex-shrink-0 fixed md:static bottom-0 z-40 md:h-screen shadow-xl">
         <div class="p-6 hidden md:block">
             <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-holding-heart mr-2"></i>NGO Finance</h1>
-            <p class="text-xs text-gray-400 mt-1">v5.2 Pro Fixed</p>
+            <p class="text-xs text-gray-400 mt-1">v5.3 Pro Quick Region</p>
         </div>
         <nav class="md:mt-4 flex md:flex-col overflow-x-auto md:overflow-visible w-full bg-secondary">
             <a href="#" onclick="showSection('dashboard')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item active-nav border-t-4 md:border-t-0 md:border-l-4 border-primary bg-gray-800 text-center md:text-left text-xs md:text-base" id="nav-dashboard">
@@ -170,12 +170,20 @@
                             <!-- Regional -->
                             <div>
                                 <label class="label-text">Regional / Wilayah</label>
-                                <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required>
-                                    <!-- JS Populated -->
-                                </select>
+                                <div class="flex gap-2">
+                                    <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required>
+                                        <!-- JS Populated -->
+                                    </select>
+                                    <button type="button" onclick="quickAddRegion()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Tambah Regional Baru">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    *Klik (+) untuk menambah regional baru secara instan.
+                                </p>
                             </div>
                             
-                            <!-- Event Selector (NEW) -->
+                            <!-- Event Selector -->
                             <div>
                                 <label class="label-text flex justify-between">
                                     <span>Pilih Acara / Program</span>
@@ -598,6 +606,34 @@
                     loadEventsForRegion(region, newEventName);
                     Swal.fire('Berhasil', `Acara "${newEventName}" siap digunakan!`, 'success');
                 }
+            }
+        }
+        
+        async function quickAddRegion() {
+            const { value: newRegion } = await Swal.fire({
+                title: 'Tambah Regional Baru',
+                input: 'text',
+                inputLabel: 'Nama Kota / Wilayah',
+                inputPlaceholder: 'Contoh: Medan',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                inputValidator: (value) => {
+                    if (!value) return 'Nama tidak boleh kosong!';
+                    if (regions.includes(value)) return 'Regional sudah ada!';
+                }
+            });
+
+            if (newRegion) {
+                regions.push(newRegion);
+                renderRegions(); // Updates LS and Dropdowns
+                
+                // Select the new region immediately
+                document.getElementById('t-region').value = newRegion;
+                
+                // Trigger event loading (though likely empty for new region)
+                loadEventsForRegion(newRegion);
+                
+                Swal.fire('Berhasil', `Regional "${newRegion}" ditambahkan!`, 'success');
             }
         }
 
