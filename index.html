@@ -100,8 +100,18 @@
 
             <!-- Charts -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
-                <div class="chart-container"><canvas id="cashFlowChart"></canvas></div>
-                <div class="chart-container"><canvas id="breakdownChart"></canvas></div>
+                <div class="chart-container">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Arus Kas Bulanan</h3>
+                    <div class="relative h-[280px]">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-2" id="breakdown-title">Distribusi</h3>
+                    <div class="relative h-[280px] flex justify-center">
+                        <canvas id="breakdownChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <!-- Table -->
