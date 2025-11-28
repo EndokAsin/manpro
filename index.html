@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Keuangan NGO - Pro</title>
+    <title>Sistem Keuangan NGO - Master Event</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS -->
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- SweetAlert2 (Untuk Popup yang lebih bagus) -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
@@ -31,9 +31,10 @@
 <body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col md:flex-row">
 
     <!-- Sidebar Navigation -->
-    <aside class="w-full md:w-64 bg-secondary text-white flex-shrink-0 fixed md:static bottom-0 z-40 md:h-screen">
+    <aside class="w-full md:w-64 bg-secondary text-white flex-shrink-0 fixed md:static bottom-0 z-40 md:h-screen shadow-xl">
         <div class="p-6 hidden md:block">
             <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-holding-heart mr-2"></i>NGO Finance</h1>
+            <p class="text-xs text-gray-400 mt-1">v5.0 Pro Event Master</p>
         </div>
         <nav class="md:mt-4 flex md:flex-col overflow-x-auto md:overflow-visible w-full bg-secondary">
             <a href="#" onclick="showSection('dashboard')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item active-nav border-t-4 md:border-t-0 md:border-l-4 border-primary bg-gray-800 text-center md:text-left text-xs md:text-base" id="nav-dashboard">
@@ -43,7 +44,7 @@
                 <i class="fa-solid fa-plus-circle md:w-6 block md:inline mb-1 md:mb-0"></i> Transaksi
             </a>
             <a href="#" onclick="showSection('events')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item border-t-4 md:border-t-0 md:border-l-4 border-transparent text-center md:text-left text-xs md:text-base" id="nav-events">
-                <i class="fa-solid fa-calendar-check md:w-6 block md:inline mb-1 md:mb-0"></i> Acara
+                <i class="fa-solid fa-calendar-check md:w-6 block md:inline mb-1 md:mb-0"></i> Data Acara
             </a>
             <a href="#" onclick="showSection('regions')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item border-t-4 md:border-t-0 md:border-l-4 border-transparent text-center md:text-left text-xs md:text-base" id="nav-regions">
                 <i class="fa-solid fa-map-location-dot md:w-6 block md:inline mb-1 md:mb-0"></i> Regional
@@ -64,62 +65,51 @@
 
         <!-- DASHBOARD SECTION -->
         <section id="dashboard" class="content-section space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <!-- Header & Filter -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 bg-white p-4 rounded-lg shadow-sm">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-800">Dashboard</h2>
-                    <p class="text-sm text-gray-500 mt-1">Ringkasan keuangan per regional & acara</p>
+                    <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                    <p class="text-sm text-gray-500">Monitor keuangan per regional & acara</p>
                 </div>
-                
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                    <!-- Filter Regional -->
-                    <select id="dashboard-filter-region" onchange="handleRegionFilterChange()" class="w-full sm:w-auto px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white">
+                    <select id="dashboard-filter-region" onchange="handleRegionFilterChange()" class="filter-select">
                         <option value="all">Semua Regional</option>
-                        <!-- Populated by JS -->
                     </select>
-
-                    <!-- Filter Event -->
-                    <select id="dashboard-filter-event" onchange="applyFilter()" class="w-full sm:w-auto px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-primary focus:border-primary bg-white disabled:bg-gray-100 disabled:text-gray-400" disabled>
+                    <select id="dashboard-filter-event" onchange="applyFilter()" class="filter-select disabled:bg-gray-100" disabled>
                         <option value="all">Semua Acara</option>
-                        <!-- Populated by JS -->
                     </select>
-
-                    <button onclick="fetchData()" class="w-full sm:w-auto bg-white p-2 px-4 rounded shadow hover:bg-gray-50 text-primary border font-medium">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                    </button>
+                    <button onclick="fetchData()" class="btn-icon"><i class="fa-solid fa-arrows-rotate"></i></button>
                 </div>
             </div>
 
-            <!-- Summary Cards -->
+            <!-- Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-green-500">
-                    <div class="text-gray-500 text-xs font-bold uppercase">Pemasukan</div>
-                    <div class="text-xl md:text-2xl font-bold text-green-600 mt-1" id="total-income">Rp 0</div>
+                <div class="stats-card border-green-500">
+                    <div class="title">Total Pemasukan</div>
+                    <div class="value text-green-600" id="total-income">Rp 0</div>
                 </div>
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-red-500">
-                    <div class="text-gray-500 text-xs font-bold uppercase">Pengeluaran</div>
-                    <div class="text-xl md:text-2xl font-bold text-red-600 mt-1" id="total-expense">Rp 0</div>
+                <div class="stats-card border-red-500">
+                    <div class="title">Total Pengeluaran</div>
+                    <div class="value text-red-600" id="total-expense">Rp 0</div>
                 </div>
-                <div class="bg-white p-5 rounded-lg shadow border-l-4 border-blue-500">
-                    <div class="text-gray-500 text-xs font-bold uppercase">Saldo Akhir</div>
-                    <div class="text-xl md:text-2xl font-bold text-blue-800 mt-1" id="net-balance">Rp 0</div>
+                <div class="stats-card border-blue-500">
+                    <div class="title">Saldo Akhir</div>
+                    <div class="value text-blue-800" id="net-balance">Rp 0</div>
                 </div>
             </div>
 
             <!-- Charts -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
-                <div class="bg-white p-4 rounded-lg shadow h-80">
-                    <h3 class="text-sm font-bold text-gray-700 mb-2">Arus Kas Bulanan</h3>
-                    <div class="h-64 w-full relative"><canvas id="cashFlowChart"></canvas></div>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow h-80">
-                    <h3 class="text-sm font-bold text-gray-700 mb-2" id="breakdown-title">Distribusi</h3>
-                    <div class="h-64 w-full relative flex justify-center"><canvas id="breakdownChart"></canvas></div>
-                </div>
+                <div class="chart-container"><canvas id="cashFlowChart"></canvas></div>
+                <div class="chart-container"><canvas id="breakdownChart"></canvas></div>
             </div>
 
-            <!-- Transactions Table -->
+            <!-- Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
-                <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700">Riwayat Transaksi Terakhir</div>
+                <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700 flex justify-between items-center">
+                    <span>Riwayat Transaksi Terakhir</span>
+                    <span class="text-xs font-normal text-gray-500">*Data real-time</span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-100 text-gray-600 uppercase font-semibold">
@@ -140,135 +130,138 @@
 
         <!-- INPUT SECTION -->
         <section id="input" class="content-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Input Transaksi</h2>
-            <div class="bg-white p-6 rounded-lg shadow max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Input Transaksi Baru</h2>
+            <div class="bg-white p-6 rounded-lg shadow max-w-4xl mx-auto border-t-4 border-primary">
                 <form id="transaction-form" onsubmit="handleTransactionSubmit(event)">
-                    <input type="hidden" id="t-id"> <!-- Hidden ID for Edit Mode -->
+                    <input type="hidden" id="t-id">
                     
-                    <!-- CONTEXT SETTING / SETTING ACARA -->
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-xs font-bold text-blue-800 uppercase tracking-wide"><i class="fa-solid fa-layer-group mr-1"></i> Setting Acara & Waktu</h3>
-                            <div class="flex items-center bg-white px-2 py-1 rounded border border-blue-100">
-                                <input type="checkbox" id="keep-context" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
-                                <label for="keep-context" class="ml-2 text-xs font-semibold text-blue-700 cursor-pointer select-none">
-                                    Mode Input Beruntun (Kunci Pilihan)
-                                </label>
-                            </div>
+                    <!-- MASTER DATA SELECTION -->
+                    <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 mb-6 relative">
+                        <div class="absolute top-4 right-4 flex items-center bg-white px-3 py-1 rounded-full shadow-sm border border-blue-100">
+                            <input type="checkbox" id="keep-context" class="w-4 h-4 text-blue-600 rounded cursor-pointer">
+                            <label for="keep-context" class="ml-2 text-xs font-bold text-blue-700 cursor-pointer select-none">
+                                Kunci Pilihan (Input Beruntun)
+                            </label>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                        <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide mb-4"><i class="fa-solid fa-layer-group mr-2"></i>1. Pilih Konteks</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Regional -->
                             <div>
-                                <label class="label-text">Regional</label>
-                                <select id="t-region" class="input-field" onchange="updateEventSuggestions()" required>
+                                <label class="label-text">Regional / Wilayah</label>
+                                <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required>
                                     <!-- JS Populated -->
                                 </select>
                             </div>
-                            <!-- Event -->
+                            
+                            <!-- Event Selector (NEW) -->
                             <div>
-                                <label class="label-text">Nama Acara (Opsional)</label>
-                                <input type="text" id="t-event" list="event-suggestions" class="input-field" placeholder="Cth: Bandung Menyapa 1">
-                                <datalist id="event-suggestions"></datalist>
-                                <p class="text-[10px] text-gray-500 mt-1">*Ketik untuk buat baru atau pilih yang ada</p>
-                            </div>
-                            <!-- Date -->
-                            <div>
-                                <label class="label-text">Tanggal Transaksi</label>
-                                <input type="date" id="t-date" class="input-field" required>
+                                <label class="label-text flex justify-between">
+                                    <span>Pilih Acara / Program</span>
+                                    <span class="text-xs font-normal text-gray-500 italic">Wajib pilih dari daftar</span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <select id="t-event-select" class="input-field bg-white font-medium text-gray-700" required>
+                                        <option value="">-- Pilih Regional Dahulu --</option>
+                                    </select>
+                                    <button type="button" onclick="quickAddEvent()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Buat Acara Baru">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    *Jika acara belum ada, klik tombol <b>(+)</b> untuk menambahkan ke database.
+                                </p>
                             </div>
                         </div>
-                        <p class="text-[10px] text-blue-600 mt-2 italic">*Centang "Mode Input Beruntun" jika ingin memasukkan banyak transaksi untuk acara yang sama sekaligus.</p>
                     </div>
-                    <!-- END CONTEXT SETTING -->
 
+                    <!-- TRANSACTION DETAILS -->
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3 px-1"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>2. Detail Keuangan</h3>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <!-- Type -->
                         <div>
-                            <label class="label-text">Jenis Arus</label>
+                            <label class="label-text">Jenis Transaksi</label>
                             <select id="t-type" class="input-field font-bold" required>
                                 <option value="expense" class="text-red-600">Pengeluaran (Keluar)</option>
                                 <option value="income" class="text-green-600">Pemasukan (Masuk)</option>
                             </select>
                         </div>
-                        <!-- Category -->
                         <div class="md:col-span-2">
                             <label class="label-text">Kategori</label>
-                            <input type="text" id="t-category" list="category-suggestions" class="input-field" placeholder="Cth: Konsumsi, Transport, Donasi, Sponsor" required>
+                            <input type="text" id="t-category" list="category-suggestions" class="input-field" placeholder="Cth: Konsumsi, Transport, Donasi" required>
                             <datalist id="category-suggestions">
-                                <option value="Operasional">
-                                <option value="Konsumsi">
-                                <option value="Transportasi">
-                                <option value="Donasi Umum">
-                                <option value="Sponsorship">
-                                <option value="Belanja Modal">
+                                <option value="Operasional"><option value="Konsumsi"><option value="Transportasi">
+                                <option value="Donasi Umum"><option value="Sponsorship"><option value="Belanja Modal">
                             </datalist>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="label-text">Jumlah (Rp)</label>
-                        <input type="number" id="t-amount" min="1" class="input-field text-lg font-semibold" placeholder="0" required>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <label class="label-text">Keterangan Detail</label>
-                        <textarea id="t-desc" rows="2" class="input-field" placeholder="Detail transaksi..."></textarea>
-                    </div>
-
-                    <!-- Proof -->
-                    <div class="mb-6">
-                        <label class="label-text">Bukti Foto (Opsional)</label>
-                        <input type="file" id="t-proof" class="input-field p-2" accept="image/*">
-                        <div id="current-proof" class="mt-2 text-xs text-blue-600 hidden">
-                            <a href="#" target="_blank" id="current-proof-link">Lihat Bukti Tersimpan</a>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="label-text">Jumlah (Rp)</label>
+                            <input type="number" id="t-amount" min="1" class="input-field text-lg font-bold text-gray-800" placeholder="0" required>
+                        </div>
+                        <div>
+                            <label class="label-text">Tanggal</label>
+                            <input type="date" id="t-date" class="input-field" required>
                         </div>
                     </div>
 
-                    <div class="flex gap-2">
-                        <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded hover:bg-blue-800 shadow">
-                            <i class="fa-solid fa-save mr-2"></i> Simpan Data
+                    <div class="mb-4">
+                        <label class="label-text">Keterangan Tambahan</label>
+                        <textarea id="t-desc" rows="2" class="input-field" placeholder="Detail keperluan..."></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="label-text">Upload Bukti</label>
+                        <input type="file" id="t-proof" class="input-field p-2 bg-gray-50" accept="image/*">
+                        <div id="current-proof" class="mt-2 text-xs hidden">
+                            <a href="#" target="_blank" id="current-proof-link" class="text-blue-600 hover:underline"><i class="fa-solid fa-paperclip"></i> Lihat bukti saat ini</a>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded hover:bg-blue-800 shadow-lg transition transform active:scale-95">
+                            <i class="fa-solid fa-save mr-2"></i> Simpan Transaksi
                         </button>
-                        <button type="button" onclick="resetForm(true)" class="px-4 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                            Reset Total
+                        <button type="button" onclick="resetForm(true)" class="px-5 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-medium">
+                            Reset
                         </button>
                     </div>
                 </form>
             </div>
         </section>
 
-        <!-- EVENTS MANAGEMENT SECTION (NEW) -->
+        <!-- EVENT MASTER DATA SECTION (NEW) -->
         <section id="events" class="content-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Manajemen Acara</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Instruction -->
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 lg:col-span-3">
-                    <h4 class="font-bold text-blue-800"><i class="fa-solid fa-circle-info mr-1"></i> Info Manajemen Event</h4>
-                    <p class="text-sm text-blue-700">Gunakan menu ini untuk memperbaiki nama acara. Mengubah nama acara di sini akan otomatis <strong>mengupdate seluruh transaksi</strong> yang terkait dengan nama acara tersebut di database.</p>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Database Acara</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700">Daftar Semua Program/Acara</h3>
+                    <button onclick="fetchEvents()" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"><i class="fa-solid fa-sync"></i> Refresh</button>
                 </div>
+                
+                <p class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-100">
+                    <i class="fa-solid fa-lightbulb text-yellow-500 mr-1"></i>
+                    Acara yang didaftarkan di sini akan muncul otomatis di menu dropdown saat input transaksi.
+                </p>
 
-                <!-- Event List & Rename -->
-                <div class="bg-white p-6 rounded-lg shadow lg:col-span-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-gray-700">Daftar Acara per Regional</h3>
-                        <button onclick="renderEventManagement()" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"><i class="fa-solid fa-sync"></i> Refresh</button>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-100 text-gray-600">
-                                <tr>
-                                    <th class="p-3">Regional</th>
-                                    <th class="p-3">Nama Acara</th>
-                                    <th class="p-3 text-center">Jml Transaksi</th>
-                                    <th class="p-3 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="event-management-list" class="divide-y divide-gray-100">
-                                <!-- JS Populated -->
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3">Regional</th>
+                                <th class="p-3">Nama Acara</th>
+                                <th class="p-3 text-center">Status</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="master-event-list" class="divide-y divide-gray-100">
+                            <!-- JS Populated -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -301,27 +294,17 @@
         <button class="absolute top-5 right-5 text-white text-3xl">&times;</button>
     </div>
 
-    <!-- Styles for Input -->
     <style>
-        .input-field {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .input-field:focus {
-            border-color: #1e40af;
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
-        }
-        .label-text {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.25rem;
-        }
+        .input-field { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 0.375rem; outline: none; transition: all 0.2s; }
+        .input-field:focus { border-color: #1e40af; ring: 2px; box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1); }
+        .label-text { display: block; font-size: 0.8rem; font-weight: 700; color: #4b5563; margin-bottom: 0.3rem; }
+        .filter-select { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; outline: none; font-size: 0.9rem; }
+        .btn-icon { padding: 0.5rem 1rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.375rem; color: #1e40af; }
+        .btn-icon:hover { background: #f3f4f6; }
+        .stats-card { background: white; padding: 1.25rem; border-radius: 0.5rem; border-left-width: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stats-card .title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #6b7280; }
+        .stats-card .value { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+        .chart-container { background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); height: 320px; position: relative; }
     </style>
 
     <script>
@@ -333,39 +316,43 @@
         // --- STATE ---
         let regions = JSON.parse(localStorage.getItem('ngo_regions')) || ['Jakarta', 'Bandung', 'Surabaya', 'Papua'];
         let transactions = [];
+        let eventsList = []; // Master Data Events
         let currentRegionFilter = 'all';
         let currentEventFilter = 'all';
         let cashFlowChartInstance = null;
         let breakdownChartInstance = null;
-        let isEditing = false; // Mode Edit Flag
+        let isEditing = false;
 
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('t-date').valueAsDate = new Date();
             renderRegions();
             fetchData();
+            fetchEvents();
         });
 
         function showSection(sectionId) {
             document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(sectionId).classList.remove('hidden');
             
-            // Render specific section logic
-            if(sectionId === 'events') renderEventManagement();
-
+            // Re-render nav state
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('bg-gray-800', 'border-primary');
                 el.classList.add('border-transparent');
             });
             document.getElementById('nav-' + sectionId).classList.add('bg-gray-800', 'border-primary');
             document.getElementById('nav-' + sectionId).classList.remove('border-transparent');
+
+            // Refresh data if entering dashboard or events
+            if (sectionId === 'dashboard' || sectionId === 'events') {
+                fetchEvents(); // Ensure list is updated
+            }
         }
 
         // --- DATA OPERATIONS ---
         async function fetchData() {
             showLoading(true);
             try {
-                // Select category too
                 const { data, error } = await supabase
                     .from('transactions')
                     .select('*')
@@ -376,13 +363,40 @@
                 handleRegionFilterChange(false);
             } catch (err) {
                 console.error(err);
-                if(err.message.includes('category')) {
-                    Swal.fire('Update Database Diperlukan', "Kolom 'category' belum ada. Jalankan: <br><code>alter table public.transactions add column category text;</code>", 'error');
-                } else {
-                    Swal.fire('Error', err.message, 'error');
-                }
+                Swal.fire('Error', err.message, 'error');
             } finally {
                 showLoading(false);
+            }
+        }
+
+        async function fetchEvents() {
+            try {
+                const { data, error } = await supabase
+                    .from('events')
+                    .select('*')
+                    .order('name', { ascending: true });
+
+                if (error) {
+                    if(error.code === '42P01') {
+                        // Table doesn't exist
+                        console.warn("Tabel 'events' belum dibuat.");
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Setup Database',
+                            html: 'Fitur baru memerlukan tabel <b>events</b>.<br>Silakan jalankan SQL ini di Supabase:<br><pre class="text-left bg-gray-100 p-2 text-xs mt-2 overflow-auto">create table public.events (\n  id bigint generated by default as identity primary key,\n  created_at timestamp with time zone default timezone(\'utc\'::text, now()) not null,\n  region text not null,\n  name text not null,\n  status text default \'active\'\n);</pre>'
+                        });
+                    }
+                    return;
+                }
+                
+                eventsList = data || [];
+                renderMasterEventList();
+                // If we are on input page, refresh dropdown
+                const currentRegion = document.getElementById('t-region').value;
+                if(currentRegion) loadEventsForRegion(currentRegion);
+
+            } catch (err) {
+                console.error("Fetch events error:", err);
             }
         }
 
@@ -390,27 +404,28 @@
             e.preventDefault();
             showLoading(true);
 
-            // Get Values
             const id = document.getElementById('t-id').value;
             const type = document.getElementById('t-type').value;
             const region = document.getElementById('t-region').value;
-            const eventName = document.getElementById('t-event').value;
+            const eventName = document.getElementById('t-event-select').value; // Get from Select
             const category = document.getElementById('t-category').value;
             const amount = parseFloat(document.getElementById('t-amount').value);
             const date = document.getElementById('t-date').value;
             const description = document.getElementById('t-desc').value;
             const file = document.getElementById('t-proof').files[0];
 
-            // Construct payload
+            if (!eventName) {
+                showLoading(false);
+                Swal.fire('Error', 'Silakan pilih Acara. Jika belum ada, buat acara baru dengan tombol (+).', 'warning');
+                return;
+            }
+
             const payload = {
                 type, region, event_name: eventName, category, amount, description,
-                // If adding new, use date (timestamp). If editing, we might want to keep created_at or update it. 
-                // Let's create a ISO string from the date input
                 created_at: new Date(date).toISOString() 
             };
 
             try {
-                // Upload Proof if exists
                 if (file) {
                     const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,5)}.${file.name.split('.').pop()}`;
                     const { error: uploadError } = await supabase.storage.from('proofs').upload(fileName, file);
@@ -421,32 +436,26 @@
                 }
 
                 if (isEditing && id) {
-                    // UPDATE
                     const { error } = await supabase.from('transactions').update(payload).eq('id', id);
                     if (error) throw error;
-                    Swal.fire('Sukses', 'Transaksi berhasil diperbarui!', 'success');
+                    Swal.fire('Sukses', 'Transaksi diperbarui!', 'success');
                 } else {
-                    // INSERT
                     const { error } = await supabase.from('transactions').insert([payload]);
                     if (error) throw error;
                     
-                    // Simple Toast instead of full Alert for easier flow
                     const Toast = Swal.mixin({
                         toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
                         didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
                     });
-                    Toast.fire({ icon: 'success', title: 'Transaksi disimpan' });
+                    Toast.fire({ icon: 'success', title: 'Data tersimpan' });
                 }
 
                 resetForm();
-                
-                // Jika sedang di Dashboard, refresh data. Jika tidak, fetch background aja.
-                if(!document.getElementById('dashboard').classList.contains('hidden')) {
-                    fetchData();
-                } else {
-                    // Background refresh
+                if(!document.getElementById('dashboard').classList.contains('hidden')) fetchData();
+                else {
+                    // Background sync
                     const { data } = await supabase.from('transactions').select('*').order('created_at', {ascending: false});
-                    if(data) transactions = data;
+                    if(data) transactions = data; 
                 }
 
             } catch (err) {
@@ -457,24 +466,13 @@
         }
 
         async function deleteTransaction(id) {
-            const result = await Swal.fire({
-                title: 'Hapus Transaksi?',
-                text: "Data tidak bisa dikembalikan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus'
-            });
-
+            const result = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
             if (result.isConfirmed) {
                 showLoading(true);
-                const { error } = await supabase.from('transactions').delete().eq('id', id);
+                await supabase.from('transactions').delete().eq('id', id);
                 showLoading(false);
-                if (error) Swal.fire('Error', error.message, 'error');
-                else {
-                    Swal.fire('Terhapus', 'Transaksi dihapus.', 'success');
-                    fetchData();
-                }
+                fetchData();
+                Swal.fire('Terhapus', '', 'success');
             }
         }
 
@@ -483,173 +481,205 @@
             if (!t) return;
 
             isEditing = true;
+            showSection('input');
+            
             document.getElementById('t-id').value = t.id;
             document.getElementById('t-region').value = t.region;
-            updateEventSuggestions(); // Refresh datalist based on region
             
-            document.getElementById('t-event').value = t.event_name || '';
+            // Load events for this region, then select the event
+            loadEventsForRegion(t.region, t.event_name);
+
             document.getElementById('t-category').value = t.category || '';
             document.getElementById('t-type').value = t.type;
             document.getElementById('t-amount').value = t.amount;
             document.getElementById('t-desc').value = t.description || '';
-            
-            // Handle Date
-            const dateObj = new Date(t.created_at);
-            document.getElementById('t-date').value = dateObj.toISOString().split('T')[0];
+            document.getElementById('t-date').value = new Date(t.created_at).toISOString().split('T')[0];
 
-            // Disable keep-context during edit
             document.getElementById('keep-context').checked = false;
             document.getElementById('keep-context').disabled = true;
 
-            // Show proof link if exists
             const proofLink = document.getElementById('current-proof');
-            const linkTag = document.getElementById('current-proof-link');
             if (t.proof_url) {
-                linkTag.href = t.proof_url;
+                document.getElementById('current-proof-link').href = t.proof_url;
                 proofLink.classList.remove('hidden');
             } else {
                 proofLink.classList.add('hidden');
             }
-
-            // Switch UI
-            showSection('input');
-            document.querySelector('#input h2').innerText = 'Edit Transaksi';
         }
 
         function resetForm(forceFullReset = false) {
             const keepContext = document.getElementById('keep-context').checked;
             
-            // Simpan nilai context jika mode beruntun aktif
             const region = document.getElementById('t-region').value;
-            const eventName = document.getElementById('t-event').value;
+            const eventName = document.getElementById('t-event-select').value;
             const date = document.getElementById('t-date').value;
             const category = document.getElementById('t-category').value;
             
-            // Clear Form
             document.getElementById('transaction-form').reset();
             
-            // Restore jika keepContext aktif dan bukan Force Reset (Tombol Reset Total)
             if(keepContext && !forceFullReset && !isEditing) {
                 document.getElementById('t-region').value = region;
-                document.getElementById('t-event').value = eventName;
+                loadEventsForRegion(region, eventName); // Reload and reselect
                 document.getElementById('t-date').value = date;
-                document.getElementById('t-category').value = category; // Opsional: biasanya kategori berubah, tapi kadang sama
-                document.getElementById('keep-context').checked = true; 
-                
-                // Pastikan datalist tetap muncul
-                updateEventSuggestions();
+                document.getElementById('t-category').value = category;
+                document.getElementById('keep-context').checked = true;
             } else {
-                // Jika reset total, kembalikan tanggal ke hari ini
                 document.getElementById('t-date').valueAsDate = new Date();
                 document.getElementById('keep-context').checked = false;
                 document.getElementById('keep-context').disabled = false;
+                // Reset select event dropdown
+                if(!region) document.getElementById('t-event-select').innerHTML = '<option value="">-- Pilih Regional Dahulu --</option>';
             }
 
             isEditing = false;
             document.getElementById('t-id').value = '';
-            document.querySelector('#input h2').innerText = 'Catat Transaksi Baru';
             document.getElementById('current-proof').classList.add('hidden');
         }
 
-        // --- EVENT MANAGEMENT ---
-        function renderEventManagement() {
-            const tbody = document.getElementById('event-management-list');
-            tbody.innerHTML = '';
+        // --- NEW EVENT LOGIC ---
 
-            // Group transactions by Region -> Event Name
-            const map = {};
-            transactions.forEach(t => {
-                if (!t.event_name) return;
-                const key = `${t.region}||${t.event_name}`;
-                if (!map[key]) map[key] = { region: t.region, name: t.event_name, count: 0 };
-                map[key].count++;
-            });
-
-            const list = Object.values(map).sort((a,b) => a.region.localeCompare(b.region));
-
-            if(list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Belum ada acara tercatat.</td></tr>`;
+        function loadEventsForRegion(regionName, selectedEvent = null) {
+            const select = document.getElementById('t-event-select');
+            select.innerHTML = '<option value="">-- Pilih Acara --</option>';
+            
+            if (!regionName) {
+                select.innerHTML = '<option value="">-- Pilih Regional Dahulu --</option>';
                 return;
             }
 
-            list.forEach((evt, idx) => {
-                const row = `
-                    <tr class="hover:bg-gray-50 border-b last:border-0">
-                        <td class="p-3 font-medium text-gray-700">${evt.region}</td>
-                        <td class="p-3 font-bold text-blue-800">${evt.name}</td>
-                        <td class="p-3 text-center text-gray-600 bg-gray-50 rounded">${evt.count}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="renameEvent('${evt.region}', '${evt.name}')" class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-xs font-bold hover:bg-yellow-200">
-                                <i class="fa-solid fa-pen"></i> Ubah Nama
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+            // Filter master data
+            const regionEvents = eventsList.filter(e => e.region === regionName && e.status !== 'completed');
+            
+            if (regionEvents.length === 0) {
+                 select.innerHTML += '<option value="" disabled>Belum ada acara. Klik (+) untuk buat baru.</option>';
+            }
+
+            regionEvents.forEach(evt => {
+                const opt = document.createElement('option');
+                opt.value = evt.name;
+                opt.innerText = evt.name;
+                select.appendChild(opt);
             });
+
+            // Add 'General' Option
+            const generalOpt = document.createElement('option');
+            generalOpt.value = 'Operasional Rutin';
+            generalOpt.innerText = 'Operasional Rutin (Tanpa Event)';
+            select.appendChild(generalOpt);
+
+            if (selectedEvent) {
+                // Check if selected event is in list (it might be legacy text)
+                const exists = Array.from(select.options).some(o => o.value === selectedEvent);
+                if (!exists) {
+                    // Add legacy option purely for display
+                    const legOpt = document.createElement('option');
+                    legOpt.value = selectedEvent;
+                    legOpt.innerText = selectedEvent + " (Legacy/Arsip)";
+                    select.appendChild(legOpt);
+                }
+                select.value = selectedEvent;
+            }
         }
 
-        async function renameEvent(region, oldName) {
-            const { value: newName } = await Swal.fire({
-                title: 'Ubah Nama Acara',
-                text: `Ubah "${oldName}" di ${region} menjadi:`,
+        async function quickAddEvent() {
+            const region = document.getElementById('t-region').value;
+            if (!region) {
+                Swal.fire('Info', 'Pilih Regional terlebih dahulu sebelum membuat acara.', 'info');
+                return;
+            }
+
+            const { value: newEventName } = await Swal.fire({
+                title: 'Buat Acara Baru',
+                text: `Menambahkan acara baru di ${region}:`,
                 input: 'text',
-                inputValue: oldName,
+                inputPlaceholder: 'Cth: Bandung Menyapa 2',
                 showCancelButton: true,
+                confirmButtonText: 'Simpan',
                 inputValidator: (value) => {
-                    if (!value) return 'Nama tidak boleh kosong!';
+                    if (!value) return 'Nama acara tidak boleh kosong!';
                 }
             });
 
-            if (newName && newName !== oldName) {
+            if (newEventName) {
                 showLoading(true);
-                // Update all transactions matching region and oldName
-                const { error } = await supabase
-                    .from('transactions')
-                    .update({ event_name: newName })
-                    .match({ region: region, event_name: oldName });
+                // Insert to 'events' table
+                const { error } = await supabase.from('events').insert([
+                    { region: region, name: newEventName, status: 'active' }
+                ]);
                 
-                showLoading(false);
-
-                if (error) Swal.fire('Error', error.message, 'error');
-                else {
-                    Swal.fire('Sukses', 'Nama acara berhasil diperbarui di seluruh data!', 'success');
-                    fetchData(); // Refresh all data
-                    renderEventManagement(); // Refresh table
+                if (error) {
+                    showLoading(false);
+                    Swal.fire('Error', error.message, 'error');
+                } else {
+                    await fetchEvents(); // Reload master list
+                    showLoading(false);
+                    loadEventsForRegion(region, newEventName); // Update dropdown and select new event
+                    Swal.fire('Berhasil', `Acara "${newEventName}" siap digunakan!`, 'success');
                 }
             }
         }
 
+        function renderMasterEventList() {
+            const tbody = document.getElementById('master-event-list');
+            tbody.innerHTML = '';
+            
+            if (eventsList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">Belum ada data acara di database.</td></tr>';
+                return;
+            }
 
-        // --- UI & CHARTS (Similiar to V3 but refined) ---
+            eventsList.forEach(evt => {
+                const isActive = evt.status !== 'completed';
+                const statusBadge = isActive 
+                    ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Aktif</span>`
+                    : `<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs">Selesai</span>`;
+                
+                const btn = isActive 
+                    ? `<button onclick="toggleEventStatus(${evt.id}, 'completed')" class="text-xs border border-gray-300 px-2 py-1 rounded hover:bg-gray-100">Arsipkan</button>`
+                    : `<button onclick="toggleEventStatus(${evt.id}, 'active')" class="text-xs border border-blue-300 text-blue-600 px-2 py-1 rounded hover:bg-blue-50">Aktifkan</button>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-3">${evt.region}</td>
+                        <td class="p-3 font-bold text-blue-900">${evt.name}</td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 text-center">${btn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function toggleEventStatus(id, newStatus) {
+            showLoading(true);
+            await supabase.from('events').update({ status: newStatus }).eq('id', id);
+            await fetchEvents();
+            showLoading(false);
+        }
+
+        // --- FILTERING & CHARTS (Simplified Logic from v4) ---
         function handleRegionFilterChange(resetEvent = true) {
             const regionSelect = document.getElementById('dashboard-filter-region');
             const eventSelect = document.getElementById('dashboard-filter-event');
             currentRegionFilter = regionSelect.value;
             
-            if (resetEvent) {
-                currentEventFilter = 'all';
-                eventSelect.value = 'all';
-            } else {
-                currentEventFilter = eventSelect.value;
-            }
-
+            if (resetEvent) { currentEventFilter = 'all'; eventSelect.value = 'all'; }
+            
             if (currentRegionFilter === 'all') {
                 eventSelect.disabled = true;
                 eventSelect.innerHTML = '<option value="all">Semua Acara</option>';
             } else {
                 eventSelect.disabled = false;
-                populateEventFilter(currentRegionFilter, eventSelect);
+                // Populate filter from master list + transaction history distincts
+                const events = [...new Set([
+                    ...eventsList.filter(e => e.region === currentRegionFilter).map(e => e.name),
+                    ...transactions.filter(t => t.region === currentRegionFilter && t.event_name).map(t => t.event_name)
+                ])];
+                
+                eventSelect.innerHTML = '<option value="all">Semua Acara</option>';
+                events.forEach(e => eventSelect.innerHTML += `<option value="${e}">${e}</option>`);
+                eventSelect.value = currentEventFilter;
             }
             applyFilter();
-        }
-
-        function populateEventFilter(region, selectElement) {
-            const events = [...new Set(transactions.filter(t => t.region === region && t.event_name).map(t => t.event_name))];
-            const current = selectElement.value;
-            selectElement.innerHTML = '<option value="all">Semua Acara</option>';
-            events.forEach(e => selectElement.innerHTML += `<option value="${e}">${e}</option>`);
-            if(events.includes(current)) selectElement.value = current;
         }
 
         function applyFilter() {
@@ -676,49 +706,34 @@
         function renderTransactionList(data) {
             const tbody = document.getElementById('transaction-list');
             tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-400">Tidak ada data.</td></tr>';
-                return;
-            }
+            if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Tidak ada data.</td></tr>'; return; }
 
-            data.slice(0, 50).forEach(t => { // Limit render for perf
+            data.slice(0, 50).forEach(t => {
                 const date = new Date(t.created_at).toLocaleDateString('id-ID');
                 const isInc = t.type === 'income';
                 const color = isInc ? 'text-green-600' : 'text-red-600';
-                const sign = isInc ? '+' : '-';
                 
-                const evDetails = t.event_name ? 
-                    `<div class="text-xs font-bold text-blue-700">${t.event_name}</div>` : '';
-                
-                const proofBtn = t.proof_url ? 
-                    `<button onclick="viewProof('${t.proof_url}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fa-solid fa-image"></i></button>` : '';
+                const evDetails = t.event_name ? `<div class="text-xs font-bold text-blue-700">${t.event_name}</div>` : '';
+                const proofBtn = t.proof_url ? `<button onclick="viewProof('${t.proof_url}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fa-solid fa-image"></i></button>` : '';
 
-                const row = `
-                    <tr class="hover:bg-gray-50 transition border-b">
-                        <td class="p-3 whitespace-nowrap text-gray-500">${date}</td>
-                        <td class="p-3">
-                            <div class="font-bold text-gray-700">${t.region}</div>
-                            ${evDetails}
-                        </td>
-                         <td class="p-3">
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">${t.category || '-'}</span>
-                        </td>
-                        <td class="p-3 text-gray-600 text-xs max-w-xs truncate">${t.description || '-'}</td>
-                        <td class="p-3 text-right font-bold ${color}">${sign} ${formatRupiah(t.amount)}</td>
-                        <td class="p-3 text-center whitespace-nowrap">
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-3 text-gray-500">${date}</td>
+                        <td class="p-3"><div class="font-bold text-gray-700">${t.region}</div>${evDetails}</td>
+                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.category || '-'}</span></td>
+                        <td class="p-3 text-xs text-gray-600 max-w-xs truncate">${t.description || '-'}</td>
+                        <td class="p-3 text-right font-bold ${color}">${isInc?'+':'-'} ${formatRupiah(t.amount)}</td>
+                        <td class="p-3 text-center">
                             ${proofBtn}
-                            <button onclick="editTransaction(${t.id})" class="text-yellow-600 hover:text-yellow-800 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deleteTransaction(${t.id})" class="text-red-500 hover:text-red-700 mx-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="editTransaction(${t.id})" class="text-yellow-600 mx-1"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteTransaction(${t.id})" class="text-red-500 mx-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                    </tr>`;
             });
         }
 
-        // --- CHARTS ---
         function updateCharts(data) {
-            // Cash Flow (Monthly)
+            // Cash Flow
             const monthly = {};
             data.forEach(t => {
                 const k = new Date(t.created_at).toLocaleString('id-ID', {month:'short', year:'2-digit'});
@@ -733,79 +748,50 @@
                 type: 'bar',
                 data: {
                     labels: keys,
-                    datasets: [
-                        {label:'Masuk', data: keys.map(k=>monthly[k].inc), backgroundColor:'#22c55e'},
-                        {label:'Keluar', data: keys.map(k=>monthly[k].exp), backgroundColor:'#ef4444'}
-                    ]
+                    datasets: [{label:'Masuk', data: keys.map(k=>monthly[k].inc), backgroundColor:'#22c55e'}, {label:'Keluar', data: keys.map(k=>monthly[k].exp), backgroundColor:'#ef4444'}]
                 },
                 options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
             });
 
-            // Breakdown (Category or Event)
+            // Breakdown
             const breakdown = {};
             const isAll = currentRegionFilter === 'all';
             document.getElementById('breakdown-title').innerText = isAll ? "Pemasukan per Regional" : "Pengeluaran per Kategori";
 
             data.forEach(t => {
-                if(isAll) {
-                    // Show Income Source if Global
-                    if(t.type === 'income') breakdown[t.region] = (breakdown[t.region]||0) + t.amount;
-                } else {
-                    // Show Expense Category if Specific Region
-                    if(t.type === 'expense') {
-                        const k = t.category || t.event_name || 'Lainnya';
-                        breakdown[k] = (breakdown[k]||0) + t.amount;
-                    }
-                }
+                if(isAll) { if(t.type === 'income') breakdown[t.region] = (breakdown[t.region]||0) + t.amount; } 
+                else { if(t.type === 'expense') { const k = t.category || 'Lainnya'; breakdown[k] = (breakdown[k]||0) + t.amount; } }
             });
 
             const ctx2 = document.getElementById('breakdownChart').getContext('2d');
             if(breakdownChartInstance) breakdownChartInstance.destroy();
             breakdownChartInstance = new Chart(ctx2, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(breakdown),
-                    datasets: [{
-                        data: Object.values(breakdown),
-                        backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7', '#ec4899', '#64748b']
-                    }]
-                },
-                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{boxWidth:12, font:{size:10}}}} }
+                data: { labels: Object.keys(breakdown), datasets: [{ data: Object.values(breakdown), backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7'] }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
             });
         }
 
         // --- UTILS ---
         function renderRegions() {
-            const list = document.getElementById('regions-list');
-            list.innerHTML = '';
-            regions.forEach((r,i) => {
-                list.innerHTML += `<li class="py-2 flex justify-between border-b last:border-0"><span>${r}</span> <button onclick="deleteRegion(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></li>`;
-            });
-            localStorage.setItem('ngo_regions', JSON.stringify(regions));
-            
-            // Dropdowns
             const opts = regions.map(r => `<option value="${r}">${r}</option>`).join('');
-            document.getElementById('t-region').innerHTML = opts;
+            document.getElementById('t-region').innerHTML = '<option value="">-- Pilih --</option>' + opts;
             
             const filter = document.getElementById('dashboard-filter-region');
             const curr = filter.value;
             filter.innerHTML = '<option value="all">Semua Regional</option>' + opts;
             if(regions.includes(curr)) filter.value = curr;
+            
+            const list = document.getElementById('regions-list');
+            list.innerHTML = regions.map((r,i) => `<li class="py-2 flex justify-between border-b"><span>${r}</span> <button onclick="deleteRegion(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></li>`).join('');
+            localStorage.setItem('ngo_regions', JSON.stringify(regions));
         }
 
         function addRegion() {
             const val = document.getElementById('new-region-name').value.trim();
             if(val && !regions.includes(val)) { regions.push(val); renderRegions(); document.getElementById('new-region-name').value=''; }
         }
-        function deleteRegion(i) {
-            if(confirm('Hapus regional?')) { regions.splice(i,1); renderRegions(); }
-        }
-
-        function updateEventSuggestions() {
-            const r = document.getElementById('t-region').value;
-            const evs = [...new Set(transactions.filter(t => t.region === r && t.event_name).map(t => t.event_name))];
-            document.getElementById('event-suggestions').innerHTML = evs.map(e => `<option value="${e}">`).join('');
-        }
+        function deleteRegion(i) { if(confirm('Hapus regional?')) { regions.splice(i,1); renderRegions(); } }
 
         function formatRupiah(n) { return new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(n); }
         function showLoading(b) { document.getElementById('loading').classList.toggle('hidden', !b); }
