@@ -145,21 +145,41 @@
                 <form id="transaction-form" onsubmit="handleTransactionSubmit(event)">
                     <input type="hidden" id="t-id"> <!-- Hidden ID for Edit Mode -->
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <!-- Regional -->
-                        <div>
-                            <label class="label-text">Regional</label>
-                            <select id="t-region" class="input-field" onchange="updateEventSuggestions()" required>
-                                <!-- JS Populated -->
-                            </select>
+                    <!-- CONTEXT SETTING / SETTING ACARA -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xs font-bold text-blue-800 uppercase tracking-wide"><i class="fa-solid fa-layer-group mr-1"></i> Setting Acara & Waktu</h3>
+                            <div class="flex items-center bg-white px-2 py-1 rounded border border-blue-100">
+                                <input type="checkbox" id="keep-context" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
+                                <label for="keep-context" class="ml-2 text-xs font-semibold text-blue-700 cursor-pointer select-none">
+                                    Mode Input Beruntun (Kunci Pilihan)
+                                </label>
+                            </div>
                         </div>
-                        <!-- Event -->
-                        <div>
-                            <label class="label-text">Nama Acara (Opsional)</label>
-                            <input type="text" id="t-event" list="event-suggestions" class="input-field" placeholder="Cth: Bandung Menyapa 1">
-                            <datalist id="event-suggestions"></datalist>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Regional -->
+                            <div>
+                                <label class="label-text">Regional</label>
+                                <select id="t-region" class="input-field" onchange="updateEventSuggestions()" required>
+                                    <!-- JS Populated -->
+                                </select>
+                            </div>
+                            <!-- Event -->
+                            <div>
+                                <label class="label-text">Nama Acara (Opsional)</label>
+                                <input type="text" id="t-event" list="event-suggestions" class="input-field" placeholder="Cth: Bandung Menyapa 1">
+                                <datalist id="event-suggestions"></datalist>
+                                <p class="text-[10px] text-gray-500 mt-1">*Ketik untuk buat baru atau pilih yang ada</p>
+                            </div>
+                            <!-- Date -->
+                            <div>
+                                <label class="label-text">Tanggal Transaksi</label>
+                                <input type="date" id="t-date" class="input-field" required>
+                            </div>
                         </div>
+                        <p class="text-[10px] text-blue-600 mt-2 italic">*Centang "Mode Input Beruntun" jika ingin memasukkan banyak transaksi untuk acara yang sama sekaligus.</p>
                     </div>
+                    <!-- END CONTEXT SETTING -->
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <!-- Type -->
@@ -170,9 +190,9 @@
                                 <option value="income" class="text-green-600">Pemasukan (Masuk)</option>
                             </select>
                         </div>
-                        <!-- Category (New Feature) -->
+                        <!-- Category -->
                         <div class="md:col-span-2">
-                            <label class="label-text">Kategori (Manual Input)</label>
+                            <label class="label-text">Kategori</label>
                             <input type="text" id="t-category" list="category-suggestions" class="input-field" placeholder="Cth: Konsumsi, Transport, Donasi, Sponsor" required>
                             <datalist id="category-suggestions">
                                 <option value="Operasional">
@@ -185,17 +205,9 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <!-- Amount -->
-                        <div>
-                            <label class="label-text">Jumlah (Rp)</label>
-                            <input type="number" id="t-amount" min="1" class="input-field" placeholder="0" required>
-                        </div>
-                        <!-- Date -->
-                        <div>
-                            <label class="label-text">Tanggal</label>
-                            <input type="date" id="t-date" class="input-field" required>
-                        </div>
+                    <div class="mb-4">
+                        <label class="label-text">Jumlah (Rp)</label>
+                        <input type="number" id="t-amount" min="1" class="input-field text-lg font-semibold" placeholder="0" required>
                     </div>
 
                     <!-- Description -->
@@ -217,8 +229,8 @@
                         <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded hover:bg-blue-800 shadow">
                             <i class="fa-solid fa-save mr-2"></i> Simpan Data
                         </button>
-                        <button type="button" onclick="resetForm()" class="px-4 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                            Batal
+                        <button type="button" onclick="resetForm(true)" class="px-4 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                            Reset Total
                         </button>
                     </div>
                 </form>
@@ -390,8 +402,6 @@
             const file = document.getElementById('t-proof').files[0];
 
             // Construct payload
-            // Use inputted date + current time to preserve sort order roughly, or just use date
-            // For simplicity, we use the date inputted or existing created_at if editing
             const payload = {
                 type, region, event_name: eventName, category, amount, description,
                 // If adding new, use date (timestamp). If editing, we might want to keep created_at or update it. 
@@ -419,12 +429,25 @@
                     // INSERT
                     const { error } = await supabase.from('transactions').insert([payload]);
                     if (error) throw error;
-                    Swal.fire('Sukses', 'Transaksi baru berhasil disimpan!', 'success');
+                    
+                    // Simple Toast instead of full Alert for easier flow
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
+                        didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
+                    });
+                    Toast.fire({ icon: 'success', title: 'Transaksi disimpan' });
                 }
 
                 resetForm();
-                showSection('dashboard');
-                fetchData();
+                
+                // Jika sedang di Dashboard, refresh data. Jika tidak, fetch background aja.
+                if(!document.getElementById('dashboard').classList.contains('hidden')) {
+                    fetchData();
+                } else {
+                    // Background refresh
+                    const { data } = await supabase.from('transactions').select('*').order('created_at', {ascending: false});
+                    if(data) transactions = data;
+                }
 
             } catch (err) {
                 Swal.fire('Gagal', err.message, 'error');
@@ -474,6 +497,10 @@
             const dateObj = new Date(t.created_at);
             document.getElementById('t-date').value = dateObj.toISOString().split('T')[0];
 
+            // Disable keep-context during edit
+            document.getElementById('keep-context').checked = false;
+            document.getElementById('keep-context').disabled = true;
+
             // Show proof link if exists
             const proofLink = document.getElementById('current-proof');
             const linkTag = document.getElementById('current-proof-link');
@@ -489,11 +516,37 @@
             document.querySelector('#input h2').innerText = 'Edit Transaksi';
         }
 
-        function resetForm() {
-            isEditing = false;
+        function resetForm(forceFullReset = false) {
+            const keepContext = document.getElementById('keep-context').checked;
+            
+            // Simpan nilai context jika mode beruntun aktif
+            const region = document.getElementById('t-region').value;
+            const eventName = document.getElementById('t-event').value;
+            const date = document.getElementById('t-date').value;
+            const category = document.getElementById('t-category').value;
+            
+            // Clear Form
             document.getElementById('transaction-form').reset();
+            
+            // Restore jika keepContext aktif dan bukan Force Reset (Tombol Reset Total)
+            if(keepContext && !forceFullReset && !isEditing) {
+                document.getElementById('t-region').value = region;
+                document.getElementById('t-event').value = eventName;
+                document.getElementById('t-date').value = date;
+                document.getElementById('t-category').value = category; // Opsional: biasanya kategori berubah, tapi kadang sama
+                document.getElementById('keep-context').checked = true; 
+                
+                // Pastikan datalist tetap muncul
+                updateEventSuggestions();
+            } else {
+                // Jika reset total, kembalikan tanggal ke hari ini
+                document.getElementById('t-date').valueAsDate = new Date();
+                document.getElementById('keep-context').checked = false;
+                document.getElementById('keep-context').disabled = false;
+            }
+
+            isEditing = false;
             document.getElementById('t-id').value = '';
-            document.getElementById('t-date').valueAsDate = new Date();
             document.querySelector('#input h2').innerText = 'Catat Transaksi Baru';
             document.getElementById('current-proof').classList.add('hidden');
         }
