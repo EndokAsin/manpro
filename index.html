@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Keuangan NGO - Master Event</title>
+    <title>Sistem Keuangan NGO - Terintegrasi</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS -->
@@ -36,7 +36,7 @@
     <aside class="w-full md:w-64 bg-secondary text-white flex-shrink-0 fixed md:static bottom-0 z-40 md:h-screen shadow-xl">
         <div class="p-6 hidden md:block">
             <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-holding-heart mr-2"></i>NGO Finance</h1>
-            <p class="text-xs text-gray-400 mt-1">v5.3 Pro Quick Region</p>
+            <p class="text-xs text-gray-400 mt-1">v6.0 Full Sync DB</p>
         </div>
         <nav class="md:mt-4 flex md:flex-col overflow-x-auto md:overflow-visible w-full bg-secondary">
             <a href="#" onclick="showSection('dashboard')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item active-nav border-t-4 md:border-t-0 md:border-l-4 border-primary bg-gray-800 text-center md:text-left text-xs md:text-base" id="nav-dashboard">
@@ -61,7 +61,7 @@
         <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center">
             <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
                 <i class="fa-solid fa-spinner fa-spin text-primary text-2xl mr-3"></i>
-                <span>Memproses data...</span>
+                <span>Sinkronisasi Data...</span>
             </div>
         </div>
 
@@ -84,7 +84,7 @@
                     </select>
                     <!-- Action Buttons -->
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="fetchData()" class="btn-icon" title="Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button onclick="fetchAllData()" class="btn-icon" title="Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
                         <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2 text-sm font-bold w-full justify-center sm:w-auto">
                             <i class="fa-solid fa-file-excel"></i> Export Excel
                         </button>
@@ -128,7 +128,7 @@
             <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
                 <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700 flex justify-between items-center">
                     <span>Riwayat Transaksi Terakhir</span>
-                    <span class="text-xs font-normal text-gray-500">*Data real-time</span>
+                    <span class="text-xs font-normal text-gray-500">*Data real-time DB</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
@@ -172,14 +172,14 @@
                                 <label class="label-text">Regional / Wilayah</label>
                                 <div class="flex gap-2">
                                     <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required>
-                                        <!-- JS Populated -->
+                                        <!-- JS Populated from DB -->
                                     </select>
                                     <button type="button" onclick="quickAddRegion()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Tambah Regional Baru">
                                         <i class="fa-solid fa-plus"></i>
                                     </button>
                                 </div>
                                 <p class="text-[10px] text-gray-500 mt-1">
-                                    *Klik (+) untuk menambah regional baru secara instan.
+                                    *Pilih regional dari Database atau tambah baru.
                                 </p>
                             </div>
                             
@@ -198,7 +198,7 @@
                                     </button>
                                 </div>
                                 <p class="text-[10px] text-gray-500 mt-1">
-                                    *Jika acara belum ada, klik tombol <b>(+)</b> untuk menambahkan ke database.
+                                    *Acara akan terfilter otomatis sesuai regional.
                                 </p>
                             </div>
                         </div>
@@ -261,7 +261,7 @@
             </div>
         </section>
 
-        <!-- EVENT MASTER DATA SECTION (NEW) -->
+        <!-- EVENT MASTER DATA SECTION -->
         <section id="events" class="content-section hidden">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Database Acara</h2>
             
@@ -271,11 +271,6 @@
                     <button onclick="fetchEvents()" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"><i class="fa-solid fa-sync"></i> Refresh</button>
                 </div>
                 
-                <p class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-100">
-                    <i class="fa-solid fa-lightbulb text-yellow-500 mr-1"></i>
-                    Acara yang didaftarkan di sini akan muncul otomatis di menu dropdown saat input transaksi.
-                </p>
-
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
@@ -306,9 +301,13 @@
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
+                    <p class="text-xs text-gray-500 mt-2">*Data ini tersimpan di Database Utama dan akan muncul di semua menu.</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h3 class="font-bold mb-3">Daftar Regional</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold">Daftar Regional (Database)</h3>
+                        <button onclick="fetchRegions()" class="text-xs text-blue-600"><i class="fa-solid fa-refresh"></i></button>
+                    </div>
                     <ul id="regions-list" class="divide-y divide-gray-100"></ul>
                 </div>
             </div>
@@ -342,9 +341,9 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- STATE ---
-        let regions = JSON.parse(localStorage.getItem('ngo_regions')) || ['Jakarta', 'Bandung', 'Surabaya', 'Papua'];
+        let regionsList = []; // Now fetching from DB
         let transactions = [];
-        let eventsList = []; // Master Data Events
+        let eventsList = []; 
         let currentRegionFilter = 'all';
         let currentEventFilter = 'all';
         let cashFlowChartInstance = null;
@@ -354,16 +353,13 @@
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('t-date').valueAsDate = new Date();
-            renderRegions();
-            fetchData();
-            fetchEvents();
+            fetchAllData();
         });
 
         function showSection(sectionId) {
             document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(sectionId).classList.remove('hidden');
             
-            // Re-render nav state
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('bg-gray-800', 'border-primary');
                 el.classList.add('border-transparent');
@@ -371,52 +367,148 @@
             document.getElementById('nav-' + sectionId).classList.add('bg-gray-800', 'border-primary');
             document.getElementById('nav-' + sectionId).classList.remove('border-transparent');
 
-            // Force refresh UI components if entering dashboard to ensure updated lists
-            if (sectionId === 'dashboard') {
-                renderRegions(); // Update dropdowns just in case
-                fetchEvents();
-            } else if (sectionId === 'events') {
-                fetchEvents();
+            // Always ensure data is fresh when switching
+            if (sectionId === 'dashboard' || sectionId === 'events' || sectionId === 'regions') {
+                fetchAllData();
             }
         }
 
-        // --- DATA OPERATIONS ---
-        async function fetchData() {
+        async function fetchAllData() {
             showLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('transactions')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                transactions = data || [];
-                handleRegionFilterChange(false);
-            } catch (err) {
-                console.error(err);
-                Swal.fire('Error', err.message, 'error');
+                await Promise.all([fetchRegions(), fetchTransactions(), fetchEvents()]);
+            } catch (error) {
+                console.error(error);
             } finally {
                 showLoading(false);
             }
         }
 
-        async function fetchEvents() {
-            try {
-                const { data, error } = await supabase
-                    .from('events')
-                    .select('*')
-                    .order('name', { ascending: true });
+        // --- 1. REGIONS OPERATIONS (DB BACKED) ---
+        async function fetchRegions() {
+            const { data, error } = await supabase.from('regions').select('*').order('name', {ascending: true});
+            if (error) {
+                // Graceful fallback for new table
+                if(error.code === '42P01') {
+                    console.warn("Tabel 'regions' belum ada. Menggunakan LocalStorage sementara.");
+                    regionsList = JSON.parse(localStorage.getItem('ngo_regions')) || ['Jakarta', 'Bandung', 'Surabaya'];
+                } else {
+                    console.error("Fetch Regions Error:", error);
+                }
+            } else {
+                regionsList = data.map(r => r.name);
+            }
+            renderRegionsUI();
+        }
+
+        async function addRegion() {
+            const input = document.getElementById('new-region-name');
+            const val = input.value.trim();
+            if (!val) return;
+
+            showLoading(true);
+            const { error } = await supabase.from('regions').insert([{ name: val }]);
+            showLoading(false);
+
+            if (error) {
+                if(error.code === '23505') Swal.fire('Gagal', 'Regional sudah ada di database.', 'warning');
+                else Swal.fire('Error', error.message, 'error');
+            } else {
+                input.value = '';
+                await fetchRegions(); // Refresh all dropdowns
+                Swal.fire('Sukses', `Regional ${val} berhasil ditambahkan ke database!`, 'success');
+            }
+        }
+
+        async function quickAddRegion() {
+            const { value: newRegion } = await Swal.fire({
+                title: 'Tambah Regional Baru',
+                input: 'text',
+                inputLabel: 'Nama Kota / Wilayah',
+                inputPlaceholder: 'Contoh: Medan',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan ke Database',
+                inputValidator: (value) => { if (!value) return 'Nama tidak boleh kosong!'; }
+            });
+
+            if (newRegion) {
+                showLoading(true);
+                const { error } = await supabase.from('regions').insert([{ name: newRegion }]);
+                showLoading(false);
 
                 if (error) {
-                    if(error.code === '42P01') return; // Ignore if table missing initially
-                    return;
+                    if(error.code === '23505') Swal.fire('Info', 'Regional sudah ada.', 'info');
+                    else Swal.fire('Error', error.message, 'error');
+                } else {
+                    await fetchRegions(); // Refresh global list
+                    // Auto select the new one
+                    const tRegion = document.getElementById('t-region');
+                    tRegion.value = newRegion;
+                    loadEventsForRegion(newRegion);
+                    Swal.fire('Berhasil', `Regional "${newRegion}" tersimpan di database!`, 'success');
                 }
-                eventsList = data || [];
-                renderMasterEventList();
-                // If we are on input page, refresh dropdown
-                const currentRegion = document.getElementById('t-region').value;
-                if(currentRegion) loadEventsForRegion(currentRegion);
-            } catch (err) { console.error(err); }
+            }
+        }
+
+        async function deleteRegion(index) {
+            const regionName = regionsList[index];
+            const result = await Swal.fire({ 
+                title: 'Hapus Regional?', 
+                text: `Menghapus "${regionName}" dari database master. Data transaksi lama tetap aman.`,
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#d33', 
+                confirmButtonText: 'Ya, Hapus' 
+            });
+
+            if (result.isConfirmed) {
+                showLoading(true);
+                const { error } = await supabase.from('regions').delete().eq('name', regionName);
+                showLoading(false);
+                
+                if (error) Swal.fire('Error', error.message, 'error');
+                else {
+                    await fetchRegions();
+                    Swal.fire('Terhapus', '', 'success');
+                }
+            }
+        }
+
+        function renderRegionsUI() {
+            // 1. Manage List
+            const list = document.getElementById('regions-list');
+            list.innerHTML = '';
+            regionsList.forEach((r, i) => {
+                list.innerHTML += `
+                    <li class="py-2 flex justify-between border-b last:border-0">
+                        <span class="font-medium">${r}</span> 
+                        <button onclick="deleteRegion(${i})" class="text-red-500 text-xs hover:bg-red-50 p-1 rounded"><i class="fa-solid fa-trash"></i> Hapus</button>
+                    </li>`;
+            });
+
+            // 2. Transaction Dropdown
+            const inputSelect = document.getElementById('t-region');
+            const currentInput = inputSelect.value;
+            inputSelect.innerHTML = '<option value="">-- Pilih --</option>';
+            regionsList.forEach(r => inputSelect.add(new Option(r, r)));
+            if (regionsList.includes(currentInput)) inputSelect.value = currentInput;
+
+            // 3. Dashboard Filter
+            const filterSelect = document.getElementById('dashboard-filter-region');
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = '<option value="all">Semua Regional</option>';
+            regionsList.forEach(r => filterSelect.add(new Option(r, r)));
+            if (currentFilter === 'all' || regionsList.includes(currentFilter)) filterSelect.value = currentFilter;
+            else filterSelect.value = 'all';
+        }
+
+        // --- 2. TRANSACTIONS OPERATIONS ---
+        async function fetchTransactions() {
+            const { data, error } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+            if (!error) {
+                transactions = data || [];
+                handleRegionFilterChange(false);
+            }
         }
 
         async function handleTransactionSubmit(e) {
@@ -426,23 +518,16 @@
             const id = document.getElementById('t-id').value;
             const type = document.getElementById('t-type').value;
             const region = document.getElementById('t-region').value;
-            const eventName = document.getElementById('t-event-select').value; 
+            const eventName = document.getElementById('t-event-select').value;
             const category = document.getElementById('t-category').value;
             const amount = parseFloat(document.getElementById('t-amount').value);
             const date = document.getElementById('t-date').value;
             const description = document.getElementById('t-desc').value;
             const file = document.getElementById('t-proof').files[0];
 
-            if (!eventName) {
-                showLoading(false);
-                Swal.fire('Error', 'Silakan pilih Acara. Jika belum ada, buat acara baru dengan tombol (+).', 'warning');
-                return;
-            }
+            if (!eventName) { showLoading(false); Swal.fire('Error', 'Pilih Acara!', 'warning'); return; }
 
-            const payload = {
-                type, region, event_name: eventName, category, amount, description,
-                created_at: new Date(date).toISOString() 
-            };
+            const payload = { type, region, event_name: eventName, category, amount, description, created_at: new Date(date).toISOString() };
 
             try {
                 if (file) {
@@ -455,40 +540,26 @@
                 }
 
                 if (isEditing && id) {
-                    const { error } = await supabase.from('transactions').update(payload).eq('id', id);
-                    if (error) throw error;
-                    Swal.fire('Sukses', 'Transaksi diperbarui!', 'success');
+                    await supabase.from('transactions').update(payload).eq('id', id);
+                    Swal.fire('Sukses', 'Data diperbarui', 'success');
                 } else {
-                    const { error } = await supabase.from('transactions').insert([payload]);
-                    if (error) throw error;
-                    const Toast = Swal.mixin({
-                        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true,
-                        didOpen: (toast) => { toast.onmouseenter = Swal.stopTimer; toast.onmouseleave = Swal.resumeTimer; }
-                    });
-                    Toast.fire({ icon: 'success', title: 'Data tersimpan' });
+                    await supabase.from('transactions').insert([payload]);
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+                    Toast.fire({ icon: 'success', title: 'Transaksi tersimpan' });
                 }
 
                 resetForm();
-                if(!document.getElementById('dashboard').classList.contains('hidden')) fetchData();
-                else {
-                    const { data } = await supabase.from('transactions').select('*').order('created_at', {ascending: false});
-                    if(data) transactions = data; 
-                }
-            } catch (err) {
-                Swal.fire('Gagal', err.message, 'error');
-            } finally {
-                showLoading(false);
-            }
+                await fetchTransactions(); // Refresh lists
+            } catch (err) { Swal.fire('Error', err.message, 'error'); } 
+            finally { showLoading(false); }
         }
 
         async function deleteTransaction(id) {
-            const result = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
-            if (result.isConfirmed) {
+            if((await Swal.fire({ title: 'Hapus?', showCancelButton: true, confirmButtonText: 'Ya' })).isConfirmed) {
                 showLoading(true);
                 await supabase.from('transactions').delete().eq('id', id);
+                await fetchTransactions();
                 showLoading(false);
-                fetchData();
-                Swal.fire('Terhapus', '', 'success');
             }
         }
 
@@ -497,25 +568,20 @@
             if (!t) return;
             isEditing = true;
             showSection('input');
-            
             document.getElementById('t-id').value = t.id;
             document.getElementById('t-region').value = t.region;
             loadEventsForRegion(t.region, t.event_name);
-
-            document.getElementById('t-category').value = t.category || '';
             document.getElementById('t-type').value = t.type;
             document.getElementById('t-amount').value = t.amount;
+            document.getElementById('t-category').value = t.category || '';
             document.getElementById('t-desc').value = t.description || '';
             document.getElementById('t-date').value = new Date(t.created_at).toISOString().split('T')[0];
-
+            
             document.getElementById('keep-context').checked = false;
             document.getElementById('keep-context').disabled = true;
-
             const proofLink = document.getElementById('current-proof');
-            if (t.proof_url) {
-                document.getElementById('current-proof-link').href = t.proof_url;
-                proofLink.classList.remove('hidden');
-            } else { proofLink.classList.add('hidden'); }
+            if (t.proof_url) { document.getElementById('current-proof-link').href = t.proof_url; proofLink.classList.remove('hidden'); }
+            else proofLink.classList.add('hidden');
         }
 
         function resetForm(forceFullReset = false) {
@@ -544,16 +610,23 @@
             document.getElementById('current-proof').classList.add('hidden');
         }
 
+        // --- 3. EVENTS OPERATIONS ---
+        async function fetchEvents() {
+            const { data, error } = await supabase.from('events').select('*').order('name', { ascending: true });
+            if (!error) {
+                eventsList = data || [];
+                renderMasterEventList();
+                const currentRegion = document.getElementById('t-region').value;
+                if(currentRegion) loadEventsForRegion(currentRegion);
+            }
+        }
+
         function loadEventsForRegion(regionName, selectedEvent = null) {
             const select = document.getElementById('t-event-select');
-            select.innerHTML = ''; // Clear properly
+            select.innerHTML = '';
+            if (!regionName) { select.add(new Option('-- Pilih Regional Dahulu --', '')); return; }
             
-            if (!regionName) {
-                select.add(new Option('-- Pilih Regional Dahulu --', ''));
-                return;
-            }
             select.add(new Option('-- Pilih Acara --', ''));
-
             const regionEvents = eventsList.filter(e => e.region === regionName && e.status !== 'completed');
             
             if (regionEvents.length === 0) {
@@ -561,92 +634,39 @@
                  opt.disabled = true;
                  select.add(opt);
             }
-
-            regionEvents.forEach(evt => {
-                select.add(new Option(evt.name, evt.name));
-            });
-
+            regionEvents.forEach(evt => select.add(new Option(evt.name, evt.name)));
             select.add(new Option('Operasional Rutin (Tanpa Event)', 'Operasional Rutin'));
 
             if (selectedEvent) {
-                // Handle legacy/custom events not in master
-                let exists = false;
-                for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].value === selectedEvent) exists = true;
-                }
-                
-                if (!exists) {
-                    select.add(new Option(selectedEvent + " (Legacy)", selectedEvent));
-                }
+                let exists = Array.from(select.options).some(o => o.value === selectedEvent);
+                if (!exists) select.add(new Option(selectedEvent + " (Legacy)", selectedEvent));
                 select.value = selectedEvent;
             }
         }
 
         async function quickAddEvent() {
             const region = document.getElementById('t-region').value;
-            if (!region) { Swal.fire('Info', 'Pilih Regional terlebih dahulu.', 'info'); return; }
-
-            const { value: newEventName } = await Swal.fire({
-                title: 'Buat Acara Baru',
-                text: `Menambahkan acara baru di ${region}:`,
-                input: 'text',
-                inputPlaceholder: 'Cth: Bandung Menyapa 2',
-                showCancelButton: true,
-                confirmButtonText: 'Simpan',
-                inputValidator: (value) => { if (!value) return 'Nama acara tidak boleh kosong!'; }
-            });
-
-            if (newEventName) {
+            if (!region) { Swal.fire('Info', 'Pilih Regional dulu.', 'info'); return; }
+            const { value } = await Swal.fire({ title: 'Buat Acara Baru', input: 'text', showCancelButton: true });
+            if (value) {
                 showLoading(true);
-                const { error } = await supabase.from('events').insert([{ region: region, name: newEventName, status: 'active' }]);
-                if (error) { showLoading(false); Swal.fire('Error', error.message, 'error'); } 
-                else {
-                    await fetchEvents();
-                    showLoading(false);
-                    loadEventsForRegion(region, newEventName);
-                    Swal.fire('Berhasil', `Acara "${newEventName}" siap digunakan!`, 'success');
-                }
-            }
-        }
-        
-        async function quickAddRegion() {
-            const { value: newRegion } = await Swal.fire({
-                title: 'Tambah Regional Baru',
-                input: 'text',
-                inputLabel: 'Nama Kota / Wilayah',
-                inputPlaceholder: 'Contoh: Medan',
-                showCancelButton: true,
-                confirmButtonText: 'Simpan',
-                inputValidator: (value) => {
-                    if (!value) return 'Nama tidak boleh kosong!';
-                    if (regions.includes(value)) return 'Regional sudah ada!';
-                }
-            });
-
-            if (newRegion) {
-                regions.push(newRegion);
-                renderRegions(); // Updates LS and Dropdowns
-                
-                // Select the new region immediately
-                document.getElementById('t-region').value = newRegion;
-                
-                // Trigger event loading (though likely empty for new region)
-                loadEventsForRegion(newRegion);
-                
-                Swal.fire('Berhasil', `Regional "${newRegion}" ditambahkan!`, 'success');
+                await supabase.from('events').insert([{ region: region, name: value, status: 'active' }]);
+                await fetchEvents();
+                showLoading(false);
+                loadEventsForRegion(region, value);
+                Swal.fire('Sukses', 'Acara dibuat', 'success');
             }
         }
 
         function renderMasterEventList() {
             const tbody = document.getElementById('master-event-list');
             tbody.innerHTML = '';
-            if (eventsList.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">Belum ada data acara.</td></tr>'; return; }
-
+            if (eventsList.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Kosong</td></tr>'; return; }
             eventsList.forEach(evt => {
                 const isActive = evt.status !== 'completed';
-                const statusBadge = isActive ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Aktif</span>` : `<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs">Selesai</span>`;
-                const btn = isActive ? `<button onclick="toggleEventStatus(${evt.id}, 'completed')" class="text-xs border border-gray-300 px-2 py-1 rounded hover:bg-gray-100">Arsipkan</button>` : `<button onclick="toggleEventStatus(${evt.id}, 'active')" class="text-xs border border-blue-300 text-blue-600 px-2 py-1 rounded hover:bg-blue-50">Aktifkan</button>`;
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="p-3">${evt.region}</td><td class="p-3 font-bold text-blue-900">${evt.name}</td><td class="p-3 text-center">${statusBadge}</td><td class="p-3 text-center">${btn}</td></tr>`;
+                const status = isActive ? '<span class="text-green-600 font-bold">Aktif</span>' : '<span class="text-gray-400">Selesai</span>';
+                const btn = isActive ? `<button onclick="toggleEventStatus(${evt.id}, 'completed')" class="text-xs border p-1 rounded">Arsipkan</button>` : `<button onclick="toggleEventStatus(${evt.id}, 'active')" class="text-xs border p-1 rounded text-blue-600">Aktifkan</button>`;
+                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3">${evt.region}</td><td class="p-3 font-bold text-blue-900">${evt.name}</td><td class="p-3 text-center">${status}</td><td class="p-3 text-center">${btn}</td></tr>`;
             });
         }
 
@@ -657,7 +677,7 @@
             showLoading(false);
         }
 
-        // --- FILTERING & CHARTS ---
+        // --- 4. CHARTS & FILTERING ---
         function handleRegionFilterChange(resetEvent = true) {
             const regionSelect = document.getElementById('dashboard-filter-region');
             const eventSelect = document.getElementById('dashboard-filter-event');
@@ -684,11 +704,9 @@
         function applyFilter() {
             currentRegionFilter = document.getElementById('dashboard-filter-region').value;
             currentEventFilter = document.getElementById('dashboard-filter-event').value;
-            
             let filtered = transactions;
             if (currentRegionFilter !== 'all') filtered = filtered.filter(t => t.region === currentRegionFilter);
             if (currentRegionFilter !== 'all' && currentEventFilter !== 'all') filtered = filtered.filter(t => t.event_name === currentEventFilter);
-
             updateDashboard(filtered);
             renderTransactionList(filtered);
             updateCharts(filtered);
@@ -705,14 +723,19 @@
         function renderTransactionList(data) {
             const tbody = document.getElementById('transaction-list');
             tbody.innerHTML = '';
-            if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Tidak ada data.</td></tr>'; return; }
+            if(!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Tidak ada data.</td></tr>'; return; }
             data.slice(0, 50).forEach(t => {
-                const date = new Date(t.created_at).toLocaleDateString('id-ID');
-                const isInc = t.type === 'income';
-                const color = isInc ? 'text-green-600' : 'text-red-600';
-                const evDetails = t.event_name ? `<div class="text-xs font-bold text-blue-700">${t.event_name}</div>` : '';
+                const color = t.type === 'income' ? 'text-green-600' : 'text-red-600';
                 const proofBtn = t.proof_url ? `<button onclick="viewProof('${t.proof_url}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fa-solid fa-image"></i></button>` : '';
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="p-3 text-gray-500">${date}</td><td class="p-3"><div class="font-bold text-gray-700">${t.region}</div>${evDetails}</td><td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.category || '-'}</span></td><td class="p-3 text-xs text-gray-600 max-w-xs truncate">${t.description || '-'}</td><td class="p-3 text-right font-bold ${color}">${isInc?'+':'-'} ${formatRupiah(t.amount)}</td><td class="p-3 text-center">${proofBtn}<button onclick="editTransaction(${t.id})" class="text-yellow-600 mx-1"><i class="fa-solid fa-pen"></i></button><button onclick="deleteTransaction(${t.id})" class="text-red-500 mx-1"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="p-3 text-gray-500 text-xs">${new Date(t.created_at).toLocaleDateString('id-ID')}</td>
+                        <td class="p-3"><div class="font-bold text-sm">${t.region}</div><div class="text-xs text-blue-700">${t.event_name||''}</div></td>
+                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.category||'-'}</span></td>
+                        <td class="p-3 text-xs text-gray-500 truncate max-w-xs">${t.description||'-'}</td>
+                        <td class="p-3 text-right font-bold text-sm ${color}">${formatRupiah(t.amount)}</td>
+                        <td class="p-3 text-center">${proofBtn}<button onclick="editTransaction(${t.id})" class="text-yellow-600 mx-1"><i class="fa-solid fa-pen"></i></button><button onclick="deleteTransaction(${t.id})" class="text-red-500 mx-1"><i class="fa-solid fa-trash"></i></button></td>
+                    </tr>`;
             });
         }
 
@@ -720,25 +743,25 @@
             const monthly = {};
             data.forEach(t => {
                 const k = new Date(t.created_at).toLocaleString('id-ID', {month:'short', year:'2-digit'});
-                if(!monthly[k]) monthly[k] = {inc:0, exp:0, time: new Date(t.created_at)};
+                if(!monthly[k]) monthly[k] = {inc:0, exp:0, sorter: new Date(t.created_at)};
                 t.type === 'income' ? monthly[k].inc += t.amount : monthly[k].exp += t.amount;
             });
-            const keys = Object.keys(monthly).sort((a,b) => monthly[a].time - monthly[b].time);
+            const keys = Object.keys(monthly).sort((a,b) => monthly[a].sorter - monthly[b].sorter);
             
             const ctx1 = document.getElementById('cashFlowChart').getContext('2d');
             if(cashFlowChartInstance) cashFlowChartInstance.destroy();
             cashFlowChartInstance = new Chart(ctx1, {
                 type: 'bar',
                 data: { labels: keys, datasets: [{label:'Masuk', data: keys.map(k=>monthly[k].inc), backgroundColor:'#22c55e'}, {label:'Keluar', data: keys.map(k=>monthly[k].exp), backgroundColor:'#ef4444'}] },
-                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} }
+                options: { responsive:true, maintainAspectRatio:false }
             });
 
             const breakdown = {};
             const isAll = currentRegionFilter === 'all';
             document.getElementById('breakdown-title').innerText = isAll ? "Pemasukan per Regional" : "Pengeluaran per Kategori";
             data.forEach(t => {
-                if(isAll) { if(t.type === 'income') breakdown[t.region] = (breakdown[t.region]||0) + t.amount; } 
-                else { if(t.type === 'expense') { const k = t.category || 'Lainnya'; breakdown[k] = (breakdown[k]||0) + t.amount; } }
+                if(isAll) { if(t.type==='income') breakdown[t.region] = (breakdown[t.region]||0)+t.amount; }
+                else { if(t.type==='expense') { const k = t.category || 'Lainnya'; breakdown[k] = (breakdown[k]||0)+t.amount; } }
             });
             const ctx2 = document.getElementById('breakdownChart').getContext('2d');
             if(breakdownChartInstance) breakdownChartInstance.destroy();
@@ -749,98 +772,30 @@
             });
         }
 
-        // --- CORE REGION MANAGEMENT (FIXED) ---
-        function renderRegions() {
-            // 1. Render Management List
-            const list = document.getElementById('regions-list');
-            list.innerHTML = '';
-            regions.forEach((r, i) => {
-                const li = document.createElement('li');
-                li.className = 'py-2 flex justify-between border-b';
-                li.innerHTML = `<span>${r}</span> <button onclick="deleteRegion(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>`;
-                list.appendChild(li);
-            });
-
-            // 2. Update Input Dropdown
-            const inputSelect = document.getElementById('t-region');
-            const currentInput = inputSelect.value;
-            inputSelect.innerHTML = '';
-            inputSelect.add(new Option('-- Pilih --', ''));
-            regions.forEach(r => inputSelect.add(new Option(r, r)));
-            if(regions.includes(currentInput)) inputSelect.value = currentInput;
-
-            // 3. Update Dashboard Filter Dropdown (FIXED)
-            const filterSelect = document.getElementById('dashboard-filter-region');
-            const currentFilter = filterSelect.value;
-            filterSelect.innerHTML = '';
-            filterSelect.add(new Option('Semua Regional', 'all'));
-            regions.forEach(r => filterSelect.add(new Option(r, r)));
-            
-            // Restore selection logic
-            if (currentFilter === 'all' || regions.includes(currentFilter)) {
-                filterSelect.value = currentFilter;
-            } else {
-                filterSelect.value = 'all';
-            }
-
-            // Save state
-            localStorage.setItem('ngo_regions', JSON.stringify(regions));
-        }
-
-        function addRegion() {
-            const input = document.getElementById('new-region-name');
-            const val = input.value.trim();
-            if(val && !regions.includes(val)) { 
-                regions.push(val); 
-                renderRegions(); 
-                input.value=''; 
-                Swal.fire('Sukses', `Regional "${val}" berhasil ditambahkan`, 'success');
-            } else if (regions.includes(val)) {
-                Swal.fire('Info', 'Regional sudah ada', 'info');
-            }
-        }
-        function deleteRegion(i) { if(confirm('Hapus regional?')) { regions.splice(i,1); renderRegions(); } }
-
+        // --- UTILS ---
         function formatRupiah(n) { return new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(n); }
         function showLoading(b) { document.getElementById('loading').classList.toggle('hidden', !b); }
         function viewProof(u) { document.getElementById('modal-img').src=u; document.getElementById('image-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('image-modal').classList.add('hidden'); }
-        
         function exportToExcel() {
-            const region = document.getElementById('dashboard-filter-region').value;
-            const eventName = document.getElementById('dashboard-filter-event').value;
-
             let dataToExport = transactions;
-            let fileName = 'Laporan_Keuangan_Global';
-
-            if (region !== 'all') {
-                dataToExport = dataToExport.filter(t => t.region === region);
-                fileName = `Laporan_${region}`;
-                if (eventName !== 'all') {
-                    dataToExport = dataToExport.filter(t => t.event_name === eventName);
-                    fileName += `_${eventName}`;
-                } else { fileName += `_SemuaAcara`; }
+            let fileName = 'Laporan_Global';
+            if (currentRegionFilter !== 'all') {
+                dataToExport = dataToExport.filter(t => t.region === currentRegionFilter);
+                fileName = `Laporan_${currentRegionFilter}`;
+                if (currentEventFilter !== 'all') {
+                    dataToExport = dataToExport.filter(t => t.event_name === currentEventFilter);
+                    fileName += `_${currentEventFilter}`;
+                }
             }
-
-            if (dataToExport.length === 0) { Swal.fire('Info', 'Tidak ada data.', 'info'); return; }
-
-            const wsData = dataToExport.map(t => ({
-                'Tanggal': new Date(t.created_at).toLocaleDateString('id-ID'),
-                'Regional': t.region,
-                'Acara': t.event_name || 'Operasional Rutin',
-                'Kategori': t.category || '-',
-                'Tipe': t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-                'Jumlah': t.amount,
-                'Deskripsi': t.description,
-                'Bukti': t.proof_url || 'Tidak ada'
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(wsData);
+            if (!dataToExport.length) { Swal.fire('Info', 'Tidak ada data', 'info'); return; }
+            const ws = XLSX.utils.json_to_sheet(dataToExport.map(t => ({
+                Tanggal: new Date(t.created_at).toLocaleDateString('id-ID'),
+                Regional: t.region, Acara: t.event_name, Kategori: t.category, Tipe: t.type, Jumlah: t.amount, Ket: t.description, Bukti: t.proof_url
+            })));
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Laporan Keuangan");
-            fileName = fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            const dateStr = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `${fileName}_${dateStr}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+            XLSX.writeFile(wb, `${fileName}.xlsx`);
         }
     </script>
 </body>
