@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Keuangan NGO - Event Budgeting Fixed</title>
+    <title>Sistem Keuangan NGO - Smart Budgeting</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,7 +31,7 @@
         <div>
             <div class="p-6 hidden md:block">
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-holding-heart mr-2"></i>NGO Finance</h1>
-                <p class="text-xs text-gray-400 mt-1">v9.1 Event Budget Fixed</p>
+                <p class="text-xs text-gray-400 mt-1">v10.0 Smart Calculator</p>
             </div>
             <nav class="md:mt-4 flex md:flex-col overflow-x-auto md:overflow-visible w-full bg-secondary">
                 <a href="#" onclick="showSection('dashboard')" class="nav-item active-nav block py-3 px-6 hover:bg-gray-700 transition border-l-4 border-primary bg-gray-800" id="nav-dashboard">
@@ -126,7 +126,7 @@
                             </div>
                             <div>
                                 <label class="label-text">Acara (Program)</label>
-                                <div class="flex gap-2"><select id="t-event-select" class="input-field bg-white" required><option value="">-- Pilih Regional Dahulu --</option></select><button type="button" onclick="quickAddEvent()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Buat Acara Baru"><i class="fa-solid fa-plus"></i></button></div>
+                                <div class="flex gap-2"><select id="t-event-select" class="input-field bg-white" required><option value="">-- Pilih Regional Dahulu --</option></select><button type="button" onclick="quickAddEvent()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Buat Acara Baru dengan Kalkulator"><i class="fa-solid fa-calculator"></i></button></div>
                             </div>
                         </div>
                     </div>
@@ -276,7 +276,7 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY; CREATE POLICY "All" ON publ
             if(currFil==='all'||regionsData.some(r=>r.name===currFil)) fil.value=currFil; else fil.value='all';
         }
 
-        // --- EVENTS & EVENT BUDGET ---
+        // --- EVENTS & EVENT BUDGET (SMART CALC) ---
         async function fetchEvents() {
             const {data} = await supabase.from('events').select('*').order('name');
             eventsList = data||[]; renderMasterEventList(); 
@@ -290,32 +290,138 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY; CREATE POLICY "All" ON publ
             s.add(new Option('Operasional Rutin','Operasional Rutin'));
             if(selEv) s.value=selEv;
         }
+
+        // --- NEW: SMART EVENT ADDER ---
         async function quickAddEvent() {
-            const r=document.getElementById('t-region').value; if(!r) return Swal.fire('Pilih Regional','','info');
-            const {value:vals} = await Swal.fire({
+            const r = document.getElementById('t-region').value;
+            if(!r) return Swal.fire('Info', 'Pilih Regional dulu.', 'info');
+
+            // Kalkulator UI
+            const { value: formValues } = await Swal.fire({
                 title: 'Buat Acara Baru',
-                html: '<input id="swal-ev-name" class="swal2-input" placeholder="Nama Acara"><input id="swal-ev-budget" type="number" class="swal2-input" placeholder="Budget Limit (Opsional)">',
-                preConfirm: () => [document.getElementById('swal-ev-name').value, document.getElementById('swal-ev-budget').value]
+                html: `
+                    <div class="text-left space-y-3">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Nama Acara</label>
+                            <input id="swal-ev-name" class="swal2-input m-0 w-full" placeholder="Cth: Bandung Menyapa 1">
+                        </div>
+                        <div class="border-t pt-3">
+                            <label class="text-xs font-bold text-blue-600 block mb-2"><i class="fa-solid fa-calculator mr-1"></i>Kalkulator Budget (Opsional)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Harga / Tiket</label>
+                                    <input id="swal-ev-price" type="number" class="border rounded p-2 w-full text-sm" placeholder="0" oninput="calcSwalTotal()">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-gray-400">Jumlah Peserta</label>
+                                    <input id="swal-ev-pax" type="number" class="border rounded p-2 w-full text-sm" placeholder="0" oninput="calcSwalTotal()">
+                                </div>
+                            </div>
+                            <div class="mt-2 text-right">
+                                <span class="text-xs text-gray-500">Total Proyeksi (Budget Limit):</span>
+                                <div id="swal-total-display" class="font-bold text-lg text-green-600">Rp 0</div>
+                            </div>
+                        </div>
+                        <div class="text-center text-xs text-gray-400">- atau -</div>
+                        <div>
+                            <label class="text-[10px] text-gray-400">Set Manual Limit (Timpa Kalkulator)</label>
+                            <input id="swal-ev-manual" type="number" class="border rounded p-2 w-full text-sm" placeholder="Manual Limit">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan Acara',
+                preConfirm: () => {
+                    const name = document.getElementById('swal-ev-name').value;
+                    const price = parseFloat(document.getElementById('swal-ev-price').value) || 0;
+                    const pax = parseFloat(document.getElementById('swal-ev-pax').value) || 0;
+                    const manual = document.getElementById('swal-ev-manual').value;
+                    
+                    if (!name) return Swal.showValidationMessage('Nama acara wajib diisi');
+                    
+                    let limit = 0;
+                    if (manual) limit = parseFloat(manual);
+                    else limit = price * pax;
+
+                    return { name, limit };
+                },
+                didOpen: () => {
+                    // Helper to calc total in realtime
+                    window.calcSwalTotal = () => {
+                        const p = parseFloat(document.getElementById('swal-ev-price').value) || 0;
+                        const x = parseFloat(document.getElementById('swal-ev-pax').value) || 0;
+                        document.getElementById('swal-total-display').innerText = new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(p * x);
+                    }
+                }
             });
-            if(vals && vals[0]) {
-                const name = vals[0], limit = parseFloat(vals[1]) || 0;
-                await supabase.from('events').insert([{region:r, name:name, budget_limit:limit}]);
-                await fetchEvents(); loadEventsForRegion(r,name); Swal.fire('Sukses','Acara dibuat','success');
-            }
-        }
-        async function updateEventBudget(id, name, oldBudget) {
-            const {value:newBudget} = await Swal.fire({title:`Budget: ${name}`, input:'number', inputValue:oldBudget, inputLabel:'Masukkan 0 untuk tanpa batas'});
-            if(newBudget !== null) {
+
+            if (formValues) {
+                const { name, limit } = formValues;
                 showLoading(true);
-                await supabase.from('events').update({budget_limit: parseFloat(newBudget)}).eq('id',id);
-                fetchEvents(); showLoading(false);
+                await supabase.from('events').insert([{region:r, name:name, budget_limit:limit, status:'active'}]);
+                await fetchEvents();
+                showLoading(false);
+                loadEventsForRegion(r, name);
+                
+                let msg = `Acara "${name}" dibuat.`;
+                if(limit > 0) msg += ` Budget limit set: ${formatRupiah(limit)}`;
+                Swal.fire('Berhasil', msg, 'success');
             }
         }
+
+        // --- NEW: SMART BUDGET UPDATER ---
+        async function updateEventBudget(id, name, oldBudget) {
+            const { value: formValues } = await Swal.fire({
+                title: `Budget: ${name}`,
+                html: `
+                    <div class="text-left space-y-3">
+                        <div class="bg-blue-50 p-3 rounded">
+                            <label class="text-xs font-bold text-blue-600 block mb-2">Hitung Ulang Limit</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input id="swal-up-price" type="number" class="border rounded p-2 w-full text-sm" placeholder="Harga/Pax" oninput="calcUpTotal()">
+                                <input id="swal-up-pax" type="number" class="border rounded p-2 w-full text-sm" placeholder="Jml Peserta" oninput="calcUpTotal()">
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-xs text-gray-500">Hasil:</span>
+                                <span id="swal-up-total" class="font-bold text-green-600">Rp 0</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500">Budget Limit Final</label>
+                            <input id="swal-up-final" type="number" class="swal2-input m-0 w-full" value="${oldBudget}">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Update Budget',
+                preConfirm: () => document.getElementById('swal-up-final').value,
+                didOpen: () => {
+                    window.calcUpTotal = () => {
+                        const p = parseFloat(document.getElementById('swal-up-price').value) || 0;
+                        const x = parseFloat(document.getElementById('swal-up-pax').value) || 0;
+                        const total = p * x;
+                        document.getElementById('swal-up-total').innerText = new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(total);
+                        // Auto fill final input if user is typing in calculator
+                        document.getElementById('swal-up-final').value = total;
+                    }
+                }
+            });
+
+            if (formValues !== undefined) {
+                showLoading(true);
+                const newLimit = parseFloat(formValues) || 0;
+                await supabase.from('events').update({ budget_limit: newLimit }).eq('id', id);
+                await fetchEvents();
+                showLoading(false);
+                Swal.fire('Updated', `Budget baru: ${formatRupiah(newLimit)}`, 'success');
+            }
+        }
+
         function renderMasterEventList() {
             const tb=document.getElementById('master-event-list'); tb.innerHTML='';
             if(!eventsList.length) tb.innerHTML='<tr><td colspan="5" class="p-4 text-center">Kosong</td></tr>';
             
-            // Calculate usage per event
             const usageMap = {};
             transactions.filter(t=>t.type==='expense').forEach(t=> {
                 if(t.event_name) usageMap[t.event_name] = (usageMap[t.event_name]||0) + t.amount;
@@ -325,24 +431,23 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY; CREATE POLICY "All" ON publ
                 const st = e.status!=='completed' ? '<span class="text-green-600 font-bold">Aktif</span>' : '<span class="text-gray-400">Arsip</span>';
                 const btn = e.status!=='completed' ? `<button onclick="togEv(${e.id},'completed')" class="text-xs border p-1 rounded hover:bg-gray-100">Arsipkan</button>` : `<button onclick="togEv(${e.id},'active')" class="text-xs text-blue-600 border p-1 rounded hover:bg-blue-50">Aktifkan</button>`;
                 
-                // Budget Bar
                 let budgetBar = '<span class="text-xs text-gray-400">Tidak ada limit</span>';
                 if(e.budget_limit > 0) {
                     const used = usageMap[e.name] || 0;
                     const pct = Math.min((used/e.budget_limit)*100, 100);
                     const col = used > e.budget_limit ? 'bg-red-600' : (pct>80?'bg-orange-500':'bg-blue-600');
                     budgetBar = `
-                        <div class="cursor-pointer" onclick="updateEventBudget(${e.id}, '${e.name}', ${e.budget_limit})" title="Klik untuk edit budget">
+                        <div class="cursor-pointer group" onclick="updateEventBudget(${e.id}, '${e.name}', ${e.budget_limit})" title="Klik untuk hitung ulang budget">
                             <div class="flex justify-between text-xs mb-1">
                                 <span>${formatRupiah(used)}</span>
-                                <span class="font-bold text-gray-600">Limit: ${formatRupiah(e.budget_limit)}</span>
+                                <span class="font-bold text-gray-600 group-hover:text-blue-600 transition">Limit: ${formatRupiah(e.budget_limit)} <i class="fa-solid fa-pen ml-1 opacity-0 group-hover:opacity-100"></i></span>
                             </div>
                             <div class="w-full bg-gray-200 h-2 rounded"><div class="${col} h-2 rounded" style="width:${pct}%"></div></div>
                             ${used > e.budget_limit ? '<div class="text-[10px] text-red-500 font-bold">Overbudget!</div>' : ''}
                         </div>
                     `;
                 } else {
-                    budgetBar = `<button onclick="updateEventBudget(${e.id}, '${e.name}', 0)" class="text-xs text-blue-500 underline">Set Budget</button>`;
+                    budgetBar = `<button onclick="updateEventBudget(${e.id}, '${e.name}', 0)" class="text-xs text-blue-500 underline flex items-center"><i class="fa-solid fa-calculator mr-1"></i> Hitung Budget</button>`;
                 }
 
                 tb.innerHTML+=`
@@ -427,13 +532,11 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY; CREATE POLICY "All" ON publ
         // CHARTS
         function handleRegionFilterChange() { currentRegionFilter=document.getElementById('dashboard-filter-region').value; currentEventFilter='all'; applyFilter(); }
         
-        // FIXED: Added missing updateBudgetOverview function here
         function updateBudgetOverview() {
             const container = document.getElementById('budget-bars');
             if(!container) return;
             container.innerHTML = '';
             
-            // Calculate expenses per region
             const expMap = {}; 
             transactions.filter(t => t.type === 'expense').forEach(t => {
                 expMap[t.region] = (expMap[t.region] || 0) + t.amount;
@@ -482,11 +585,10 @@ ALTER TABLE public.events ENABLE ROW LEVEL SECURITY; CREATE POLICY "All" ON publ
             
             if(fEv.value!=='all') data = data.filter(t=>t.event_name===fEv.value);
             
-            // Show/Hide Budget Overview
             const budgetOverview = document.getElementById('budget-overview');
             if (currentRegionFilter === 'all') {
                 budgetOverview.classList.remove('hidden');
-                updateBudgetOverview(); // FIXED: Calling the now-defined function
+                updateBudgetOverview(); 
             } else {
                 budgetOverview.classList.add('hidden');
             }
