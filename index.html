@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Keuangan NGO - Terintegrasi</title>
+    <title>Sistem Keuangan NGO - Budgeting</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS -->
@@ -36,7 +36,7 @@
     <aside class="w-full md:w-64 bg-secondary text-white flex-shrink-0 fixed md:static bottom-0 z-40 md:h-screen shadow-xl">
         <div class="p-6 hidden md:block">
             <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-holding-heart mr-2"></i>NGO Finance</h1>
-            <p class="text-xs text-gray-400 mt-1">v6.0 Full Sync DB</p>
+            <p class="text-xs text-gray-400 mt-1">v7.1 Budget Fix</p>
         </div>
         <nav class="md:mt-4 flex md:flex-col overflow-x-auto md:overflow-visible w-full bg-secondary">
             <a href="#" onclick="showSection('dashboard')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item active-nav border-t-4 md:border-t-0 md:border-l-4 border-primary bg-gray-800 text-center md:text-left text-xs md:text-base" id="nav-dashboard">
@@ -49,7 +49,7 @@
                 <i class="fa-solid fa-calendar-check md:w-6 block md:inline mb-1 md:mb-0"></i> Data Acara
             </a>
             <a href="#" onclick="showSection('regions')" class="flex-1 md:flex-none block py-3 px-6 hover:bg-gray-700 transition nav-item border-t-4 md:border-t-0 md:border-l-4 border-transparent text-center md:text-left text-xs md:text-base" id="nav-regions">
-                <i class="fa-solid fa-map-location-dot md:w-6 block md:inline mb-1 md:mb-0"></i> Regional
+                <i class="fa-solid fa-wallet md:w-6 block md:inline mb-1 md:mb-0"></i> Budget Regional
             </a>
         </nav>
     </aside>
@@ -61,7 +61,7 @@
         <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center">
             <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
                 <i class="fa-solid fa-spinner fa-spin text-primary text-2xl mr-3"></i>
-                <span>Sinkronisasi Data...</span>
+                <span>Memproses data...</span>
             </div>
         </div>
 
@@ -71,22 +71,19 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 bg-white p-4 rounded-lg shadow-sm">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
-                    <p class="text-sm text-gray-500">Monitor keuangan per regional & acara</p>
+                    <p class="text-sm text-gray-500">Monitor keuangan & status anggaran</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                    <!-- Filter Regional -->
                     <select id="dashboard-filter-region" onchange="handleRegionFilterChange()" class="filter-select w-full sm:w-auto">
                         <option value="all">Semua Regional</option>
                     </select>
-                    <!-- Filter Acara -->
                     <select id="dashboard-filter-event" onchange="applyFilter()" class="filter-select disabled:bg-gray-100 w-full sm:w-auto" disabled>
                         <option value="all">Semua Acara</option>
                     </select>
-                    <!-- Action Buttons -->
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="fetchAllData()" class="btn-icon" title="Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
+                        <button onclick="fetchAllData()" class="btn-icon" title="Refresh"><i class="fa-solid fa-arrows-rotate"></i></button>
                         <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2 text-sm font-bold w-full justify-center sm:w-auto">
-                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                            <i class="fa-solid fa-file-excel"></i> Export
                         </button>
                     </div>
                 </div>
@@ -108,28 +105,29 @@
                 </div>
             </div>
 
+            <!-- Budget Status (Visible only when filtering All Regions to show overview) -->
+            <div id="budget-overview" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-700 mb-4">Status Anggaran per Regional</h3>
+                <div id="budget-bars" class="space-y-4">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+
             <!-- Charts -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
                 <div class="chart-container">
                     <h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Arus Kas Bulanan</h3>
-                    <div class="relative h-[280px]">
-                        <canvas id="cashFlowChart"></canvas>
-                    </div>
+                    <div class="relative h-[280px]"><canvas id="cashFlowChart"></canvas></div>
                 </div>
                 <div class="chart-container">
                     <h3 class="text-xs font-bold text-gray-500 uppercase mb-2" id="breakdown-title">Distribusi</h3>
-                    <div class="relative h-[280px] flex justify-center">
-                        <canvas id="breakdownChart"></canvas>
-                    </div>
+                    <div class="relative h-[280px] flex justify-center"><canvas id="breakdownChart"></canvas></div>
                 </div>
             </div>
 
             <!-- Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
-                <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700 flex justify-between items-center">
-                    <span>Riwayat Transaksi Terakhir</span>
-                    <span class="text-xs font-normal text-gray-500">*Data real-time DB</span>
-                </div>
+                <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700">Riwayat Transaksi Terakhir</div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-100 text-gray-600 uppercase font-semibold">
@@ -137,7 +135,6 @@
                                 <th class="px-4 py-3">Tanggal</th>
                                 <th class="px-4 py-3">Regional / Acara</th>
                                 <th class="px-4 py-3">Kategori</th>
-                                <th class="px-4 py-3">Ket.</th>
                                 <th class="px-4 py-3 text-right">Jumlah</th>
                                 <th class="px-4 py-3 text-center">Aksi</th>
                             </tr>
@@ -155,58 +152,33 @@
                 <form id="transaction-form" onsubmit="handleTransactionSubmit(event)">
                     <input type="hidden" id="t-id">
                     
-                    <!-- MASTER DATA SELECTION -->
+                    <!-- Context -->
                     <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 mb-6 relative">
                         <div class="absolute top-4 right-4 flex items-center bg-white px-3 py-1 rounded-full shadow-sm border border-blue-100">
                             <input type="checkbox" id="keep-context" class="w-4 h-4 text-blue-600 rounded cursor-pointer">
-                            <label for="keep-context" class="ml-2 text-xs font-bold text-blue-700 cursor-pointer select-none">
-                                Kunci Pilihan (Input Beruntun)
-                            </label>
+                            <label for="keep-context" class="ml-2 text-xs font-bold text-blue-700 cursor-pointer select-none">Input Beruntun</label>
                         </div>
-                        
-                        <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide mb-4"><i class="fa-solid fa-layer-group mr-2"></i>1. Pilih Konteks</h3>
-                        
+                        <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide mb-4">1. Pilih Konteks</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Regional -->
                             <div>
-                                <label class="label-text">Regional / Wilayah</label>
+                                <label class="label-text">Regional</label>
                                 <div class="flex gap-2">
-                                    <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required>
-                                        <!-- JS Populated from DB -->
-                                    </select>
-                                    <button type="button" onclick="quickAddRegion()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Tambah Regional Baru">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
+                                    <select id="t-region" class="input-field bg-white" onchange="loadEventsForRegion(this.value)" required></select>
+                                    <button type="button" onclick="quickAddRegion()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow"><i class="fa-solid fa-plus"></i></button>
                                 </div>
-                                <p class="text-[10px] text-gray-500 mt-1">
-                                    *Pilih regional dari Database atau tambah baru.
-                                </p>
                             </div>
-                            
-                            <!-- Event Selector -->
                             <div>
-                                <label class="label-text flex justify-between">
-                                    <span>Pilih Acara / Program</span>
-                                    <span class="text-xs font-normal text-gray-500 italic">Wajib pilih dari daftar</span>
-                                </label>
+                                <label class="label-text">Acara / Program</label>
                                 <div class="flex gap-2">
-                                    <select id="t-event-select" class="input-field bg-white font-medium text-gray-700" required>
-                                        <option value="">-- Pilih Regional Dahulu --</option>
-                                    </select>
-                                    <button type="button" onclick="quickAddEvent()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow" title="Buat Acara Baru">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
+                                    <select id="t-event-select" class="input-field bg-white" required><option value="">-- Pilih Regional Dahulu --</option></select>
+                                    <button type="button" onclick="quickAddEvent()" class="bg-green-600 text-white px-3 rounded hover:bg-green-700 shadow"><i class="fa-solid fa-plus"></i></button>
                                 </div>
-                                <p class="text-[10px] text-gray-500 mt-1">
-                                    *Acara akan terfilter otomatis sesuai regional.
-                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TRANSACTION DETAILS -->
-                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3 px-1"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>2. Detail Keuangan</h3>
-                    
+                    <!-- Details -->
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3 px-1">2. Detail Keuangan</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
                             <label class="label-text">Jenis Transaksi</label>
@@ -217,98 +189,89 @@
                         </div>
                         <div class="md:col-span-2">
                             <label class="label-text">Kategori</label>
-                            <input type="text" id="t-category" list="category-suggestions" class="input-field" placeholder="Cth: Konsumsi, Transport, Donasi" required>
-                            <datalist id="category-suggestions">
-                                <option value="Operasional"><option value="Konsumsi"><option value="Transportasi">
-                                <option value="Donasi Umum"><option value="Sponsorship"><option value="Belanja Modal">
-                            </datalist>
+                            <input type="text" id="t-category" list="category-suggestions" class="input-field" placeholder="Cth: Konsumsi" required>
+                            <datalist id="category-suggestions"><option value="Operasional"><option value="Konsumsi"><option value="Transportasi"><option value="Donasi Umum"></datalist>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="label-text">Jumlah (Rp)</label>
-                            <input type="number" id="t-amount" min="1" class="input-field text-lg font-bold text-gray-800" placeholder="0" required>
+                            <input type="number" id="t-amount" min="1" class="input-field text-lg font-bold" placeholder="0" required>
                         </div>
                         <div>
                             <label class="label-text">Tanggal</label>
                             <input type="date" id="t-date" class="input-field" required>
                         </div>
                     </div>
-
                     <div class="mb-4">
-                        <label class="label-text">Keterangan Tambahan</label>
-                        <textarea id="t-desc" rows="2" class="input-field" placeholder="Detail keperluan..."></textarea>
+                        <label class="label-text">Keterangan</label>
+                        <textarea id="t-desc" rows="2" class="input-field" placeholder="Detail..."></textarea>
                     </div>
-
                     <div class="mb-6">
-                        <label class="label-text">Upload Bukti</label>
+                        <label class="label-text">Bukti</label>
                         <input type="file" id="t-proof" class="input-field p-2 bg-gray-50" accept="image/*">
-                        <div id="current-proof" class="mt-2 text-xs hidden">
-                            <a href="#" target="_blank" id="current-proof-link" class="text-blue-600 hover:underline"><i class="fa-solid fa-paperclip"></i> Lihat bukti saat ini</a>
-                        </div>
+                        <div id="current-proof" class="mt-2 text-xs hidden"><a href="#" target="_blank" id="current-proof-link" class="text-blue-600 hover:underline">Lihat bukti</a></div>
                     </div>
-
                     <div class="flex gap-3">
-                        <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded hover:bg-blue-800 shadow-lg transition transform active:scale-95">
-                            <i class="fa-solid fa-save mr-2"></i> Simpan Transaksi
-                        </button>
-                        <button type="button" onclick="resetForm(true)" class="px-5 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-medium">
-                            Reset
-                        </button>
+                        <button type="submit" class="flex-1 bg-primary text-white font-bold py-3 rounded hover:bg-blue-800 shadow-lg">Simpan Transaksi</button>
+                        <button type="button" onclick="resetForm(true)" class="px-5 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Reset</button>
                     </div>
                 </form>
             </div>
         </section>
 
-        <!-- EVENT MASTER DATA SECTION -->
+        <!-- EVENT MASTER DATA -->
         <section id="events" class="content-section hidden">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Database Acara</h2>
-            
             <div class="bg-white p-6 rounded-lg shadow mb-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-gray-700">Daftar Semua Program/Acara</h3>
-                    <button onclick="fetchEvents()" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"><i class="fa-solid fa-sync"></i> Refresh</button>
+                    <h3 class="font-bold text-gray-700">Daftar Acara</h3>
+                    <button onclick="fetchEvents()" class="text-sm bg-gray-100 px-3 py-1 rounded"><i class="fa-solid fa-sync"></i> Refresh</button>
                 </div>
-                
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
-                            <tr>
-                                <th class="p-3">Regional</th>
-                                <th class="p-3">Nama Acara</th>
-                                <th class="p-3 text-center">Status</th>
-                                <th class="p-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="master-event-list" class="divide-y divide-gray-100">
-                            <!-- JS Populated -->
-                        </tbody>
+                        <thead class="bg-gray-100 sticky top-0"><tr><th class="p-3">Regional</th><th class="p-3">Nama</th><th class="p-3 text-center">Status</th><th class="p-3 text-center">Aksi</th></tr></thead>
+                        <tbody id="master-event-list" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- REGIONS SECTION -->
+        <!-- REGIONS & BUDGET SECTION -->
         <section id="regions" class="content-section hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Kelola Regional</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Regional & Anggaran</h2>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow h-fit">
-                    <h3 class="font-bold mb-3">Tambah Regional</h3>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-region-name" class="input-field" placeholder="Nama Kota/Area">
-                        <button onclick="addRegion()" class="bg-green-600 text-white px-4 rounded hover:bg-green-700">
-                            <i class="fa-solid fa-plus"></i>
+                <!-- Add Form -->
+                <div class="bg-white p-6 rounded-lg shadow h-fit border-t-4 border-green-600">
+                    <h3 class="font-bold mb-4 text-gray-800">Tambah / Update Regional</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label-text">Nama Regional</label>
+                            <input type="text" id="new-region-name" class="input-field" placeholder="Cth: Semarang">
+                        </div>
+                        <div>
+                            <label class="label-text">Batas Anggaran (Budget Limit)</label>
+                            <input type="number" id="new-region-budget" class="input-field" placeholder="0 (Tanpa batas)">
+                            <p class="text-xs text-gray-500 mt-1">Masukkan angka 0 jika tidak ada batas.</p>
+                        </div>
+                        <button onclick="addRegion()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 shadow font-bold">
+                            <i class="fa-solid fa-save mr-2"></i> Simpan Regional
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">*Data ini tersimpan di Database Utama dan akan muncul di semua menu.</p>
                 </div>
+
+                <!-- List -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold">Daftar Regional (Database)</h3>
+                        <h3 class="font-bold text-gray-700">Daftar Regional</h3>
                         <button onclick="fetchRegions()" class="text-xs text-blue-600"><i class="fa-solid fa-refresh"></i></button>
                     </div>
-                    <ul id="regions-list" class="divide-y divide-gray-100"></ul>
+                    <div class="overflow-y-auto max-h-[600px]">
+                        <ul id="regions-list" class="divide-y divide-gray-100">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
@@ -341,7 +304,7 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- STATE ---
-        let regionsList = []; // Now fetching from DB
+        let regionsData = []; // Array of Objects {name, budget_limit}
         let transactions = [];
         let eventsList = []; 
         let currentRegionFilter = 'all';
@@ -359,162 +322,152 @@
         function showSection(sectionId) {
             document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(sectionId).classList.remove('hidden');
-            
             document.querySelectorAll('.nav-item').forEach(el => {
                 el.classList.remove('bg-gray-800', 'border-primary');
                 el.classList.add('border-transparent');
             });
             document.getElementById('nav-' + sectionId).classList.add('bg-gray-800', 'border-primary');
             document.getElementById('nav-' + sectionId).classList.remove('border-transparent');
-
-            // Always ensure data is fresh when switching
-            if (sectionId === 'dashboard' || sectionId === 'events' || sectionId === 'regions') {
-                fetchAllData();
-            }
+            if (['dashboard','events','regions'].includes(sectionId)) fetchAllData();
         }
 
         async function fetchAllData() {
             showLoading(true);
-            try {
-                await Promise.all([fetchRegions(), fetchTransactions(), fetchEvents()]);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                showLoading(false);
-            }
+            try { await Promise.all([fetchRegions(), fetchTransactions(), fetchEvents()]); } 
+            catch (error) { console.error(error); } 
+            finally { showLoading(false); }
         }
 
-        // --- 1. REGIONS OPERATIONS (DB BACKED) ---
+        // --- 1. REGIONS & BUDGET LOGIC ---
         async function fetchRegions() {
             const { data, error } = await supabase.from('regions').select('*').order('name', {ascending: true});
             if (error) {
-                // Graceful fallback for new table
-                if(error.code === '42P01') {
-                    console.warn("Tabel 'regions' belum ada. Menggunakan LocalStorage sementara.");
-                    regionsList = JSON.parse(localStorage.getItem('ngo_regions')) || ['Jakarta', 'Bandung', 'Surabaya'];
+                // HANDLE MISSING TABLE ERROR
+                if(error.code === '42P01' || error.code === 'PGRST205') {
+                    console.warn("Tabel regions belum ada. Menggunakan data default/lokal.");
+                    const raw = JSON.parse(localStorage.getItem('ngo_regions')) || ['Jakarta', 'Bandung', 'Surabaya', 'Papua'];
+                    regionsData = raw.map(r => ({name: r, budget_limit: 0}));
+                    
+                    if(!window.hasAlertedDB) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Setup Database Diperlukan',
+                            html: 'Tabel <b>regions</b> belum ditemukan.<br>Silakan jalankan SQL Setup di Dashboard Supabase agar fitur Budget berjalan.',
+                        });
+                        window.hasAlertedDB = true;
+                    }
                 } else {
                     console.error("Fetch Regions Error:", error);
                 }
             } else {
-                regionsList = data.map(r => r.name);
+                regionsData = data; 
             }
             renderRegionsUI();
+            updateBudgetOverview();
         }
 
         async function addRegion() {
-            const input = document.getElementById('new-region-name');
-            const val = input.value.trim();
-            if (!val) return;
+            const name = document.getElementById('new-region-name').value.trim();
+            const budget = parseFloat(document.getElementById('new-region-budget').value) || 0;
+            if (!name) return;
 
             showLoading(true);
-            const { error } = await supabase.from('regions').insert([{ name: val }]);
+            const { error } = await supabase.from('regions').upsert({ name: name, budget_limit: budget }, { onConflict: 'name' });
             showLoading(false);
 
-            if (error) {
-                if(error.code === '23505') Swal.fire('Gagal', 'Regional sudah ada di database.', 'warning');
-                else Swal.fire('Error', error.message, 'error');
-            } else {
-                input.value = '';
-                await fetchRegions(); // Refresh all dropdowns
-                Swal.fire('Sukses', `Regional ${val} berhasil ditambahkan ke database!`, 'success');
+            if (error) Swal.fire('Error', error.message, 'error');
+            else {
+                document.getElementById('new-region-name').value = '';
+                document.getElementById('new-region-budget').value = '';
+                await fetchRegions();
+                Swal.fire('Sukses', `Regional ${name} disimpan dengan budget ${formatRupiah(budget)}`, 'success');
             }
         }
 
         async function quickAddRegion() {
-            const { value: newRegion } = await Swal.fire({
-                title: 'Tambah Regional Baru',
-                input: 'text',
-                inputLabel: 'Nama Kota / Wilayah',
-                inputPlaceholder: 'Contoh: Medan',
-                showCancelButton: true,
-                confirmButtonText: 'Simpan ke Database',
-                inputValidator: (value) => { if (!value) return 'Nama tidak boleh kosong!'; }
+            const { value: formValues } = await Swal.fire({
+                title: 'Tambah Regional',
+                html: '<input id="swal-input1" class="swal2-input" placeholder="Nama Regional">' +
+                      '<input id="swal-input2" type="number" class="swal2-input" placeholder="Budget (Opsional)">',
+                focusConfirm: false,
+                preConfirm: () => {
+                    return [
+                        document.getElementById('swal-input1').value,
+                        document.getElementById('swal-input2').value
+                    ]
+                }
             });
 
-            if (newRegion) {
+            if (formValues && formValues[0]) {
+                const name = formValues[0];
+                const budget = formValues[1] ? parseFloat(formValues[1]) : 0;
+                
                 showLoading(true);
-                const { error } = await supabase.from('regions').insert([{ name: newRegion }]);
+                const { error } = await supabase.from('regions').insert([{ name: name, budget_limit: budget }]);
                 showLoading(false);
 
                 if (error) {
-                    if(error.code === '23505') Swal.fire('Info', 'Regional sudah ada.', 'info');
+                    if(error.code === '42P01' || error.code === 'PGRST205') Swal.fire('Error Database', 'Tabel regions belum dibuat di Supabase.', 'error');
                     else Swal.fire('Error', error.message, 'error');
                 } else {
-                    await fetchRegions(); // Refresh global list
-                    // Auto select the new one
-                    const tRegion = document.getElementById('t-region');
-                    tRegion.value = newRegion;
-                    loadEventsForRegion(newRegion);
-                    Swal.fire('Berhasil', `Regional "${newRegion}" tersimpan di database!`, 'success');
+                    await fetchRegions();
+                    document.getElementById('t-region').value = name;
+                    loadEventsForRegion(name);
+                    Swal.fire('Berhasil', 'Regional ditambahkan', 'success');
                 }
             }
         }
 
-        async function deleteRegion(index) {
-            const regionName = regionsList[index];
-            const result = await Swal.fire({ 
-                title: 'Hapus Regional?', 
-                text: `Menghapus "${regionName}" dari database master. Data transaksi lama tetap aman.`,
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonColor: '#d33', 
-                confirmButtonText: 'Ya, Hapus' 
-            });
-
-            if (result.isConfirmed) {
+        async function deleteRegion(name) {
+            if((await Swal.fire({title:'Hapus Regional?', text:`Menghapus ${name} dari daftar master.`, icon:'warning', showCancelButton:true})).isConfirmed) {
                 showLoading(true);
-                const { error } = await supabase.from('regions').delete().eq('name', regionName);
+                await supabase.from('regions').delete().eq('name', name);
+                await fetchRegions();
                 showLoading(false);
-                
-                if (error) Swal.fire('Error', error.message, 'error');
-                else {
-                    await fetchRegions();
-                    Swal.fire('Terhapus', '', 'success');
-                }
             }
         }
 
         function renderRegionsUI() {
-            // 1. Manage List
             const list = document.getElementById('regions-list');
             list.innerHTML = '';
-            regionsList.forEach((r, i) => {
+            
+            regionsData.forEach((r) => {
+                const budgetText = r.budget_limit > 0 ? `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Limit: ${formatRupiah(r.budget_limit)}</span>` : `<span class="text-xs text-gray-400">Tanpa Limit</span>`;
                 list.innerHTML += `
-                    <li class="py-2 flex justify-between border-b last:border-0">
-                        <span class="font-medium">${r}</span> 
-                        <button onclick="deleteRegion(${i})" class="text-red-500 text-xs hover:bg-red-50 p-1 rounded"><i class="fa-solid fa-trash"></i> Hapus</button>
+                    <li class="py-3 border-b flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-gray-800">${r.name}</div>
+                            ${budgetText}
+                        </div>
+                        <button onclick="deleteRegion('${r.name}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                     </li>`;
             });
 
-            // 2. Transaction Dropdown
-            const inputSelect = document.getElementById('t-region');
-            const currentInput = inputSelect.value;
-            inputSelect.innerHTML = '<option value="">-- Pilih --</option>';
-            regionsList.forEach(r => inputSelect.add(new Option(r, r)));
-            if (regionsList.includes(currentInput)) inputSelect.value = currentInput;
+            // Update Dropdowns
+            const updateSelect = (id, addAllOption = false) => {
+                const sel = document.getElementById(id);
+                const curr = sel.value;
+                sel.innerHTML = addAllOption ? '<option value="all">Semua Regional</option>' : '<option value="">-- Pilih --</option>';
+                regionsData.forEach(r => sel.add(new Option(r.name, r.name)));
+                if(curr && (curr === 'all' || regionsData.some(rd => rd.name === curr))) sel.value = curr;
+                else if(addAllOption) sel.value = 'all';
+            };
 
-            // 3. Dashboard Filter
-            const filterSelect = document.getElementById('dashboard-filter-region');
-            const currentFilter = filterSelect.value;
-            filterSelect.innerHTML = '<option value="all">Semua Regional</option>';
-            regionsList.forEach(r => filterSelect.add(new Option(r, r)));
-            if (currentFilter === 'all' || regionsList.includes(currentFilter)) filterSelect.value = currentFilter;
-            else filterSelect.value = 'all';
+            updateSelect('t-region');
+            updateSelect('dashboard-filter-region', true);
         }
 
-        // --- 2. TRANSACTIONS OPERATIONS ---
+        // --- 2. TRANSACTIONS & BUDGET CHECK ---
         async function fetchTransactions() {
             const { data, error } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
-            if (!error) {
-                transactions = data || [];
-                handleRegionFilterChange(false);
-            }
+            if (!error) { transactions = data || []; handleRegionFilterChange(false); }
         }
 
         async function handleTransactionSubmit(e) {
             e.preventDefault();
             showLoading(true);
 
+            // Harvest fields
             const id = document.getElementById('t-id').value;
             const type = document.getElementById('t-type').value;
             const region = document.getElementById('t-region').value;
@@ -527,13 +480,39 @@
 
             if (!eventName) { showLoading(false); Swal.fire('Error', 'Pilih Acara!', 'warning'); return; }
 
+            // --- BUDGET CHECK LOGIC ---
+            if (type === 'expense' && !isEditing) { 
+                const regData = regionsData.find(r => r.name === region);
+                if (regData && regData.budget_limit > 0) {
+                    const currentTotal = transactions
+                        .filter(t => t.region === region && t.type === 'expense')
+                        .reduce((sum, t) => sum + t.amount, 0);
+                    
+                    if (currentTotal + amount > regData.budget_limit) {
+                        showLoading(false);
+                        const diff = (currentTotal + amount) - regData.budget_limit;
+                        const result = await Swal.fire({
+                            title: 'OVERBUDGET!',
+                            html: `Transaksi ini melebihi anggaran <b>${region}</b>.<br>Limit: ${formatRupiah(regData.budget_limit)}<br>Total baru: <span class="text-red-600 font-bold">${formatRupiah(currentTotal + amount)}</span>`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            confirmButtonText: 'Tetap Simpan',
+                            cancelButtonText: 'Batal'
+                        });
+                        if (!result.isConfirmed) return;
+                        showLoading(true); 
+                    }
+                }
+            }
+
             const payload = { type, region, event_name: eventName, category, amount, description, created_at: new Date(date).toISOString() };
 
             try {
                 if (file) {
                     const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,5)}.${file.name.split('.').pop()}`;
-                    const { error: uploadError } = await supabase.storage.from('proofs').upload(fileName, file);
-                    if (!uploadError) {
+                    const { error: upErr } = await supabase.storage.from('proofs').upload(fileName, file);
+                    if (!upErr) {
                         const { data } = supabase.storage.from('proofs').getPublicUrl(fileName);
                         payload.proof_url = data.publicUrl;
                     }
@@ -549,11 +528,54 @@
                 }
 
                 resetForm();
-                await fetchTransactions(); // Refresh lists
+                await fetchTransactions(); 
             } catch (err) { Swal.fire('Error', err.message, 'error'); } 
             finally { showLoading(false); }
         }
 
+        // --- 3. DASHBOARD BUDGET VISUALIZATION ---
+        function updateBudgetOverview() {
+            const container = document.getElementById('budget-bars');
+            container.innerHTML = '';
+            
+            const expenseMap = {};
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                expenseMap[t.region] = (expenseMap[t.region] || 0) + t.amount;
+            });
+
+            let hasBudget = false;
+
+            regionsData.forEach(r => {
+                if (r.budget_limit > 0) {
+                    hasBudget = true;
+                    const used = expenseMap[r.name] || 0;
+                    const percent = Math.min((used / r.budget_limit) * 100, 100);
+                    const isOver = used > r.budget_limit;
+                    const barColor = isOver ? 'bg-red-600' : (percent > 80 ? 'bg-orange-500' : 'bg-blue-600');
+                    const textColor = isOver ? 'text-red-600' : 'text-gray-600';
+
+                    container.innerHTML += `
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-bold">${r.name}</span>
+                                <span class="${textColor}">${formatRupiah(used)} / ${formatRupiah(r.budget_limit)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="${barColor} h-2.5 rounded-full" style="width: ${percent}%"></div>
+                            </div>
+                            ${isOver ? '<div class="text-xs text-red-500 mt-1 font-bold">Overbudget!</div>' : ''}
+                        </div>
+                    `;
+                }
+            });
+
+            if (!hasBudget) {
+                container.innerHTML = '<p class="text-sm text-gray-400 italic">Belum ada batas anggaran yang diatur.</p>';
+            }
+        }
+
+        // --- STANDARD FUNCTIONS (CRUD, Charts, Utils) ---
+        
         async function deleteTransaction(id) {
             if((await Swal.fire({ title: 'Hapus?', showCancelButton: true, confirmButtonText: 'Ya' })).isConfirmed) {
                 showLoading(true);
@@ -576,67 +598,54 @@
             document.getElementById('t-category').value = t.category || '';
             document.getElementById('t-desc').value = t.description || '';
             document.getElementById('t-date').value = new Date(t.created_at).toISOString().split('T')[0];
-            
             document.getElementById('keep-context').checked = false;
             document.getElementById('keep-context').disabled = true;
-            const proofLink = document.getElementById('current-proof');
-            if (t.proof_url) { document.getElementById('current-proof-link').href = t.proof_url; proofLink.classList.remove('hidden'); }
-            else proofLink.classList.add('hidden');
+            const pl = document.getElementById('current-proof');
+            if (t.proof_url) { document.getElementById('current-proof-link').href = t.proof_url; pl.classList.remove('hidden'); }
+            else pl.classList.add('hidden');
         }
 
         function resetForm(forceFullReset = false) {
-            const keepContext = document.getElementById('keep-context').checked;
-            const region = document.getElementById('t-region').value;
-            const eventName = document.getElementById('t-event-select').value;
-            const date = document.getElementById('t-date').value;
-            const category = document.getElementById('t-category').value;
-            
+            const keep = document.getElementById('keep-context').checked;
+            const r = document.getElementById('t-region').value;
+            const e = document.getElementById('t-event-select').value;
+            const d = document.getElementById('t-date').value;
+            const c = document.getElementById('t-category').value;
             document.getElementById('transaction-form').reset();
-            
-            if(keepContext && !forceFullReset && !isEditing) {
-                document.getElementById('t-region').value = region;
-                loadEventsForRegion(region, eventName); 
-                document.getElementById('t-date').value = date;
-                document.getElementById('t-category').value = category;
+            if(keep && !forceFullReset && !isEditing) {
+                document.getElementById('t-region').value = r;
+                loadEventsForRegion(r, e); 
+                document.getElementById('t-date').value = d;
+                document.getElementById('t-category').value = c;
                 document.getElementById('keep-context').checked = true;
             } else {
                 document.getElementById('t-date').valueAsDate = new Date();
                 document.getElementById('keep-context').checked = false;
                 document.getElementById('keep-context').disabled = false;
-                if(!region) document.getElementById('t-event-select').innerHTML = '<option value="">-- Pilih Regional Dahulu --</option>';
+                if(!r) document.getElementById('t-event-select').innerHTML = '<option value="">-- Pilih Regional Dahulu --</option>';
             }
             isEditing = false;
             document.getElementById('t-id').value = '';
             document.getElementById('current-proof').classList.add('hidden');
         }
 
-        // --- 3. EVENTS OPERATIONS ---
         async function fetchEvents() {
-            const { data, error } = await supabase.from('events').select('*').order('name', { ascending: true });
-            if (!error) {
-                eventsList = data || [];
-                renderMasterEventList();
-                const currentRegion = document.getElementById('t-region').value;
-                if(currentRegion) loadEventsForRegion(currentRegion);
-            }
+            const { data } = await supabase.from('events').select('*').order('name', { ascending: true });
+            eventsList = data || [];
+            renderMasterEventList();
+            const r = document.getElementById('t-region').value;
+            if(r) loadEventsForRegion(r);
         }
 
         function loadEventsForRegion(regionName, selectedEvent = null) {
             const select = document.getElementById('t-event-select');
             select.innerHTML = '';
             if (!regionName) { select.add(new Option('-- Pilih Regional Dahulu --', '')); return; }
-            
             select.add(new Option('-- Pilih Acara --', ''));
-            const regionEvents = eventsList.filter(e => e.region === regionName && e.status !== 'completed');
-            
-            if (regionEvents.length === 0) {
-                 const opt = new Option('Belum ada acara. Klik (+) untuk buat baru.', '');
-                 opt.disabled = true;
-                 select.add(opt);
-            }
-            regionEvents.forEach(evt => select.add(new Option(evt.name, evt.name)));
-            select.add(new Option('Operasional Rutin (Tanpa Event)', 'Operasional Rutin'));
-
+            const evs = eventsList.filter(e => e.region === regionName && e.status !== 'completed');
+            if (!evs.length) { const o = new Option('Belum ada acara', ''); o.disabled = true; select.add(o); }
+            evs.forEach(evt => select.add(new Option(evt.name, evt.name)));
+            select.add(new Option('Operasional Rutin', 'Operasional Rutin'));
             if (selectedEvent) {
                 let exists = Array.from(select.options).some(o => o.value === selectedEvent);
                 if (!exists) select.add(new Option(selectedEvent + " (Legacy)", selectedEvent));
@@ -645,58 +654,49 @@
         }
 
         async function quickAddEvent() {
-            const region = document.getElementById('t-region').value;
-            if (!region) { Swal.fire('Info', 'Pilih Regional dulu.', 'info'); return; }
+            const r = document.getElementById('t-region').value;
+            if (!r) { Swal.fire('Info', 'Pilih Regional dulu.', 'info'); return; }
             const { value } = await Swal.fire({ title: 'Buat Acara Baru', input: 'text', showCancelButton: true });
             if (value) {
                 showLoading(true);
-                await supabase.from('events').insert([{ region: region, name: value, status: 'active' }]);
+                await supabase.from('events').insert([{ region: r, name: value, status: 'active' }]);
                 await fetchEvents();
                 showLoading(false);
-                loadEventsForRegion(region, value);
+                loadEventsForRegion(r, value);
                 Swal.fire('Sukses', 'Acara dibuat', 'success');
             }
         }
 
         function renderMasterEventList() {
-            const tbody = document.getElementById('master-event-list');
-            tbody.innerHTML = '';
-            if (eventsList.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Kosong</td></tr>'; return; }
+            const tb = document.getElementById('master-event-list');
+            tb.innerHTML = '';
+            if (!eventsList.length) { tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Kosong</td></tr>'; return; }
             eventsList.forEach(evt => {
-                const isActive = evt.status !== 'completed';
-                const status = isActive ? '<span class="text-green-600 font-bold">Aktif</span>' : '<span class="text-gray-400">Selesai</span>';
-                const btn = isActive ? `<button onclick="toggleEventStatus(${evt.id}, 'completed')" class="text-xs border p-1 rounded">Arsipkan</button>` : `<button onclick="toggleEventStatus(${evt.id}, 'active')" class="text-xs border p-1 rounded text-blue-600">Aktifkan</button>`;
-                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3">${evt.region}</td><td class="p-3 font-bold text-blue-900">${evt.name}</td><td class="p-3 text-center">${status}</td><td class="p-3 text-center">${btn}</td></tr>`;
+                const s = evt.status !== 'completed' ? '<span class="text-green-600 font-bold">Aktif</span>' : '<span class="text-gray-400">Selesai</span>';
+                const b = evt.status !== 'completed' ? `<button onclick="toggleEventStatus(${evt.id}, 'completed')" class="text-xs border p-1 rounded">Arsip</button>` : `<button onclick="toggleEventStatus(${evt.id}, 'active')" class="text-xs text-blue-600 border p-1 rounded">Aktif</button>`;
+                tb.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3">${evt.region}</td><td class="p-3 font-bold text-blue-900">${evt.name}</td><td class="p-3 text-center">${s}</td><td class="p-3 text-center">${b}</td></tr>`;
             });
         }
 
-        async function toggleEventStatus(id, newStatus) {
+        async function toggleEventStatus(id, s) {
             showLoading(true);
-            await supabase.from('events').update({ status: newStatus }).eq('id', id);
+            await supabase.from('events').update({ status: s }).eq('id', id);
             await fetchEvents();
             showLoading(false);
         }
 
-        // --- 4. CHARTS & FILTERING ---
-        function handleRegionFilterChange(resetEvent = true) {
-            const regionSelect = document.getElementById('dashboard-filter-region');
-            const eventSelect = document.getElementById('dashboard-filter-event');
-            currentRegionFilter = regionSelect.value;
-            
-            if (resetEvent) { currentEventFilter = 'all'; eventSelect.value = 'all'; }
-            
-            if (currentRegionFilter === 'all') {
-                eventSelect.disabled = true;
-                eventSelect.innerHTML = '<option value="all">Semua Acara</option>';
-            } else {
-                eventSelect.disabled = false;
-                const events = [...new Set([
-                    ...eventsList.filter(e => e.region === currentRegionFilter).map(e => e.name),
-                    ...transactions.filter(t => t.region === currentRegionFilter && t.event_name).map(t => t.event_name)
-                ])];
-                eventSelect.innerHTML = '<option value="all">Semua Acara</option>';
-                events.forEach(e => eventSelect.add(new Option(e, e)));
-                eventSelect.value = currentEventFilter;
+        function handleRegionFilterChange(reset = true) {
+            const rs = document.getElementById('dashboard-filter-region');
+            const es = document.getElementById('dashboard-filter-event');
+            currentRegionFilter = rs.value;
+            if (reset) { currentEventFilter = 'all'; es.value = 'all'; }
+            if (currentRegionFilter === 'all') { es.disabled = true; es.innerHTML = '<option value="all">Semua Acara</option>'; }
+            else {
+                es.disabled = false;
+                const evs = [...new Set([...eventsList.filter(e => e.region === currentRegionFilter).map(e => e.name), ...transactions.filter(t => t.region === currentRegionFilter && t.event_name).map(t => t.event_name)])];
+                es.innerHTML = '<option value="all">Semua Acara</option>';
+                evs.forEach(e => es.add(new Option(e, e)));
+                es.value = currentEventFilter;
             }
             applyFilter();
         }
@@ -707,6 +707,15 @@
             let filtered = transactions;
             if (currentRegionFilter !== 'all') filtered = filtered.filter(t => t.region === currentRegionFilter);
             if (currentRegionFilter !== 'all' && currentEventFilter !== 'all') filtered = filtered.filter(t => t.event_name === currentEventFilter);
+            
+            const budgetOverview = document.getElementById('budget-overview');
+            if (currentRegionFilter === 'all') {
+                budgetOverview.classList.remove('hidden');
+                updateBudgetOverview();
+            } else {
+                budgetOverview.classList.add('hidden');
+            }
+
             updateDashboard(filtered);
             renderTransactionList(filtered);
             updateCharts(filtered);
@@ -721,21 +730,13 @@
         }
 
         function renderTransactionList(data) {
-            const tbody = document.getElementById('transaction-list');
-            tbody.innerHTML = '';
-            if(!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Tidak ada data.</td></tr>'; return; }
+            const tb = document.getElementById('transaction-list');
+            tb.innerHTML = '';
+            if(!data.length) { tb.innerHTML = '<tr><td colspan="6" class="text-center p-4">Tidak ada data.</td></tr>'; return; }
             data.slice(0, 50).forEach(t => {
-                const color = t.type === 'income' ? 'text-green-600' : 'text-red-600';
-                const proofBtn = t.proof_url ? `<button onclick="viewProof('${t.proof_url}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fa-solid fa-image"></i></button>` : '';
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 border-b">
-                        <td class="p-3 text-gray-500 text-xs">${new Date(t.created_at).toLocaleDateString('id-ID')}</td>
-                        <td class="p-3"><div class="font-bold text-sm">${t.region}</div><div class="text-xs text-blue-700">${t.event_name||''}</div></td>
-                        <td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.category||'-'}</span></td>
-                        <td class="p-3 text-xs text-gray-500 truncate max-w-xs">${t.description||'-'}</td>
-                        <td class="p-3 text-right font-bold text-sm ${color}">${formatRupiah(t.amount)}</td>
-                        <td class="p-3 text-center">${proofBtn}<button onclick="editTransaction(${t.id})" class="text-yellow-600 mx-1"><i class="fa-solid fa-pen"></i></button><button onclick="deleteTransaction(${t.id})" class="text-red-500 mx-1"><i class="fa-solid fa-trash"></i></button></td>
-                    </tr>`;
+                const c = t.type === 'income' ? 'text-green-600' : 'text-red-600';
+                const p = t.proof_url ? `<button onclick="viewProof('${t.proof_url}')" class="text-blue-500 mx-1"><i class="fa-solid fa-image"></i></button>` : '';
+                tb.innerHTML += `<tr class="hover:bg-gray-50 border-b"><td class="p-3 text-xs text-gray-500">${new Date(t.created_at).toLocaleDateString('id-ID')}</td><td class="p-3"><div class="font-bold text-sm">${t.region}</div><div class="text-xs text-blue-700">${t.event_name||''}</div></td><td class="p-3"><span class="bg-gray-100 px-2 py-1 rounded text-xs">${t.category||'-'}</span></td><td class="p-3 text-right font-bold text-sm ${c}">${formatRupiah(t.amount)}</td><td class="p-3 text-center">${p}<button onclick="editTransaction(${t.id})" class="text-yellow-600 mx-1"><i class="fa-solid fa-pen"></i></button><button onclick="deleteTransaction(${t.id})" class="text-red-500 mx-1"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
 
@@ -747,14 +748,9 @@
                 t.type === 'income' ? monthly[k].inc += t.amount : monthly[k].exp += t.amount;
             });
             const keys = Object.keys(monthly).sort((a,b) => monthly[a].sorter - monthly[b].sorter);
-            
             const ctx1 = document.getElementById('cashFlowChart').getContext('2d');
             if(cashFlowChartInstance) cashFlowChartInstance.destroy();
-            cashFlowChartInstance = new Chart(ctx1, {
-                type: 'bar',
-                data: { labels: keys, datasets: [{label:'Masuk', data: keys.map(k=>monthly[k].inc), backgroundColor:'#22c55e'}, {label:'Keluar', data: keys.map(k=>monthly[k].exp), backgroundColor:'#ef4444'}] },
-                options: { responsive:true, maintainAspectRatio:false }
-            });
+            cashFlowChartInstance = new Chart(ctx1, { type: 'bar', data: { labels: keys, datasets: [{label:'Masuk', data: keys.map(k=>monthly[k].inc), backgroundColor:'#22c55e'}, {label:'Keluar', data: keys.map(k=>monthly[k].exp), backgroundColor:'#ef4444'}] }, options: { responsive:true, maintainAspectRatio:false } });
 
             const breakdown = {};
             const isAll = currentRegionFilter === 'all';
@@ -765,37 +761,26 @@
             });
             const ctx2 = document.getElementById('breakdownChart').getContext('2d');
             if(breakdownChartInstance) breakdownChartInstance.destroy();
-            breakdownChartInstance = new Chart(ctx2, {
-                type: 'doughnut',
-                data: { labels: Object.keys(breakdown), datasets: [{ data: Object.values(breakdown), backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7'] }] },
-                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
-            });
+            breakdownChartInstance = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(breakdown), datasets: [{ data: Object.values(breakdown), backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7'] }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} } });
         }
 
-        // --- UTILS ---
         function formatRupiah(n) { return new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', minimumFractionDigits:0}).format(n); }
         function showLoading(b) { document.getElementById('loading').classList.toggle('hidden', !b); }
         function viewProof(u) { document.getElementById('modal-img').src=u; document.getElementById('image-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('image-modal').classList.add('hidden'); }
         function exportToExcel() {
-            let dataToExport = transactions;
-            let fileName = 'Laporan_Global';
+            let data = transactions;
+            let fname = 'Laporan_Global';
             if (currentRegionFilter !== 'all') {
-                dataToExport = dataToExport.filter(t => t.region === currentRegionFilter);
-                fileName = `Laporan_${currentRegionFilter}`;
-                if (currentEventFilter !== 'all') {
-                    dataToExport = dataToExport.filter(t => t.event_name === currentEventFilter);
-                    fileName += `_${currentEventFilter}`;
-                }
+                data = data.filter(t => t.region === currentRegionFilter);
+                fname = `Laporan_${currentRegionFilter}`;
+                if (currentEventFilter !== 'all') { data = data.filter(t => t.event_name === currentEventFilter); fname += `_${currentEventFilter}`; }
             }
-            if (!dataToExport.length) { Swal.fire('Info', 'Tidak ada data', 'info'); return; }
-            const ws = XLSX.utils.json_to_sheet(dataToExport.map(t => ({
-                Tanggal: new Date(t.created_at).toLocaleDateString('id-ID'),
-                Regional: t.region, Acara: t.event_name, Kategori: t.category, Tipe: t.type, Jumlah: t.amount, Ket: t.description, Bukti: t.proof_url
-            })));
+            if (!data.length) { Swal.fire('Info', 'Tidak ada data', 'info'); return; }
+            const ws = XLSX.utils.json_to_sheet(data.map(t => ({ Tanggal: new Date(t.created_at).toLocaleDateString('id-ID'), Regional: t.region, Acara: t.event_name, Kategori: t.category, Tipe: t.type, Jumlah: t.amount, Ket: t.description, Bukti: t.proof_url })));
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-            XLSX.writeFile(wb, `${fileName}.xlsx`);
+            XLSX.writeFile(wb, `${fname}.xlsx`);
         }
     </script>
 </body>
